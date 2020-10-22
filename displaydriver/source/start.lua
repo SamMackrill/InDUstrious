@@ -76,8 +76,8 @@ function assemblySize(id)
     return sizeIndex, machineSizes[sizeIndex]
 end
 
-substanceMass = {
-    Bauxite=1.28;
+densities = {
+    Bauxite=1.281;
     Coal=1.35;
     Quartz=2.65;
     Hematite=5.04;
@@ -187,7 +187,7 @@ function refreshOreScreens(displayLow, displayHigh, force)
 
         if not substance or substance=="" then return end
 
-        local substanceSingleMass = substanceMass[substance]
+        local substanceSingleMass = densities[substance]
         if substanceSingleMass~=nil then
             local maxHP = core.getElementMaxHitPointsById(id)
             local containerSelfMass = 0.0
@@ -213,12 +213,12 @@ function refreshOreScreens(displayLow, displayHigh, force)
             local contentMass = (core.getElementMassById(id) - containerSelfMass) * (1.0 + PlayerContainerOptimization/100)
             local volume = contentMass/substanceSingleMass
 
-            --if name=="Pure Hydrogen" then
-            --    system.print(name.." : "..volume.." ".. capacity)
-            --    system.print("containerSelfMass : "..containerSelfMass)
-            --    system.print("contentMass : "..contentMass)
-            --    system.print("substanceSingleMass : "..substanceSingleMass)
-            --end
+            if volume>capacity then
+                system.print(name.." ["..id.."] : "..volume.." ".. capacity)
+                system.print("containerSelfMass : "..containerSelfMass)
+                system.print("contentMass : "..contentMass)
+                system.print("substanceSingleMass : "..substanceSingleMass)
+            end
 
             if outputData[substance] then
                 outputData[substance].volume   = outputData[substance].volume   + volume;
@@ -252,20 +252,20 @@ function refreshOreScreens(displayLow, displayHigh, force)
         <svg>
             <rect x="0" y="1" rx="4" ry="4" height="2.5vw" width="17.2vw" stroke="white" stroke-width="1" rx="0" />
             <rect x="1" y="2" rx="3" ry="3" height="2.4vw" width="]].. (17*percent/100) ..[[vw" fill="]] .. barcolour ..[[" opacity="1.0" rx="0" />
-            <text x="1" y="23" fill="white" text-align="middle" margin-left="3">]].. string.format("%02.1f", percent) ..[[%</text>
+            <text x="1" y="23" fill="white" text-align="left" margin-left="3" font-family="]]..font..[[">]].. string.format("%02.1f", percent) ..[[%</text>
         </svg>
         </td>]]        
     end
 
     function displayFormat(id)
-        if not outputData[id] then return 0, 0, "Kl" end
+        if not outputData[id] then return "?", 0, "kℓ" end
 
         local volume = outputData[id].volume
         --system.print(id.." volume="..volume)
-        local percent = 100 * volume / outputData[id].capacity
+        local percent = math.min(100.0 * volume / outputData[id].capacity, 100.0) -- densities are not accurate anough
 
-        if volume >= 1000000 then return volume/1000000, percent, "Ml" end
-        return volume/1000, percent, "Kl"
+        if volume >= 1000000 then return string.format("%02.1f", volume/1000000), percent, "Mℓ" end
+        return string.format("%02.1f", volume/1000), percent, "kℓ"
     end
 
     function AddHTMLRow(id1, id2)
@@ -275,11 +275,11 @@ function refreshOreScreens(displayLow, displayHigh, force)
         --system.print(id2.." volume="..volume2.." units="..units2.." percent="..percent2)
         resHTML = H.r2 
             ..H.thL..id1..H.the
-            ..H.thR..string.format("%02.1f", volume1)..units1.."&nbsp;"..H.the
+            ..H.thR..volume1..units1.."&nbsp;"..H.the
             ..BarGraph(percent1)
             .."<th style=\"background-color: "..headerColour.."\">"..H.the
             ..H.thR..id2..H.the
-            ..H.thR..string.format("%02.1f", volume2)..units2.."&nbsp;"..H.the
+            ..H.thR..volume2..units2.."&nbsp;"..H.the
             ..BarGraph(percent2)
             ..H.re
         return resHTML
