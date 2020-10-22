@@ -1,9 +1,8 @@
 # InDUstrious
 Screens for a Dual Universe Industrial Control Room
 
-<img src="mon01.png" width="20vw">
-![Alerts](/mon01.png)
-![Ores](/mon02.png)
+<img src="mon01.png" width="250" alt="Alerts">
+<img src="mon02.png" width="250" alt="Ores & Pures">
 
 ### Introduction
 TBD
