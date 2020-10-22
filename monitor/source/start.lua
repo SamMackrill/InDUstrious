@@ -1,51 +1,60 @@
-system.print("unit start")
 
-selfData = json.decode(self.getData())
-system.print("Board '" .. selfData.name .. "' ON!")
+function slotValid(slot)
+    return slot 
+    and type(slot) == "table"
+    and type(slot.export) == "table"
+    and slot.getElementClass
+end
 
-function storeStatus(slotId)
-    --system.print("Slot:"..slotId)
-    
-    local slot = self["slot"..slotId]
-    if not slot or not slot.getStatus then return end
+function onStatusChanged(slot)
+    system.print(slot.getId().." status=> "..slot.getStatus())
+    storeStatus(slot)
+end
+
+function storeStatus(slot)
+    if not slotValid(slot) or not slot.getStatus then return end
     
     local elementId = slot.getId();
     if elementId == nil then return end
+    --system.print("ElementId:"..elementId)
     
-    local key = tostring(elementId) 
-    local value = slot.getStatus()
-    if data.hasKey(key) and value==data.getStringValue(key) then return end
-    
-    data.setStringValue(key, value)
-    --system.print("Set "..key.."="..value)
-    data.setIntValue("updated", 1)
+    local info = {
+       id = elementId,
+       status = slot.getStatus(),
+       cyclesCount = slot.getCycleCountSinceStartup(),
+       efficiency = slot.getEfficiency(),
+       uptime = slot.getUptime(),
+       source = self.getId(),
+       updated = 1
+    }
+    databank.setStringValue(tostring(elementId), json.encode(info))
 end
 
 
 function searchForDataSlot()
-    if (data) then return end
-    for i=1,10 do
-        local slot = self["slot"..i]
-        if slot and slot.setStringValue then
-            system.print("Found databank on slot"..i)
-            data = slot
-            return
+    for _, slot in pairs(unit) do        
+        if slotValid(slot)  then
+            if slot.getElementClass():lower() == 'databankunit' then
+                databank = slot
+                return
+            end
         end
     end
 end
 
 function queryAllSlots()
-
-    --data.clear()
-
-    for i=1,10 do
-        storeStatus(i)
+    for _, slot in pairs(unit) do
+        storeStatus(slot)
     end
 end
 
+system.print("Board ["..self.getId().."] ON!")
+unit.hide()
+
+databank = nil
 searchForDataSlot()
-if (not data) then
-    system.print("Databank not connected to data slot!")
+if not databank then
+    system.print("Databank not connected!")
     self.exit()
     return
 end
