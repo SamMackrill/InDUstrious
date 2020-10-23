@@ -16,7 +16,7 @@ TBD
 * Add a programming board
 * Connect the core and databank and screens to the programming board
 * Paste the display driver config into the programming board
-* Add upto 8 monitor programming boards
+* Add upto 9 monitor programming boards
 * Connect upto 9 industries and the databank to the monitor programming board
 * Paste the monitor config into all the monitor programming boards
 
