@@ -1,6 +1,3 @@
---unit.hide()
-system.print("Industry Status")
-
 PlayerContainerProficiency = 30 --export Your Container Proficiency bonus in total percent (Skills->Mining and Inventory->Inventory Manager)
 PlayerContainerOptimization = 0 --export Your Container Optimization bonus in total percent (Skills->Mining and Inventory->Stock Control)
 LowLevel = 25 --export At which percent level do you want bars to be drawn in yellow (not red anymore)
@@ -8,74 +5,7 @@ MediumLevel = 50 --export At which percent level do you want bars to be drawn in
 searchStringOre = " Ore" --export Your identifier for Ore Storage Containers (e.g. "Bauxite Ore"). Include the spaces if you change this!
 searchStringPure = "Pure " --export Your identifier for Pure Storage Containers (e.g. "Pure Aluminium"). Include the spaces if you change this!
 
-
-function slotValid(slot)
-    return slot 
-    and type(slot) == "table"
-    and type(slot.export) == "table"
-    and slot.getElementClass
-end
-local displays = {}
-function onStart()
-    if display1 then displays[1] = display1 end
-    if display2 then displays[2] = display2 end
-    if display3 then displays[3] = display3 end
-    if display4 then displays[4] = display4 end
-    local displayIndex = 1
-    for slotName, slot in pairs(unit) do
-        if slotValid(slot) then
-            if slot.setHTML then 
-                slot.activate()
-                --displays[displayIndex] = slot
-                --displayIndex = displayIndex + 1
-            elseif not databank and slot.getStringValue then
-                databank = slot
-            elseif not core and slot.getConstructId then
-                core = slot
-            end
-        end
-    end    
-end
- 
-function refreshScreens(force)
-    refreshOreScreens(displays[3], displays[4], force)
-    refreshIndustryScreens(displays[1], displays[2], force)
-end
-
-function processTick()   
-    local ok, msg = xpcall(function ()
-
-        refreshScreens(false)
-
-    end, traceback)
-
-    if not ok then
-      system.print(msg)
-    end
-end
-
-   
-function onStop()
-    for _, slot in pairs(unit) do
-        if slotValid(slot) then
-            if slot.setHTML then slot.clear() end
-        end
-    end    
-end
-
-function round(number,decimals)
-    local power = 10^decimals
-    return math.floor((number/1000) * power) / power
-end
-
-local machineSizes = {"XS", " S", " M", " L", "XL"}
-
-function assemblySize(id)
-    local mass = core.getElementMassById(id)
-    local sizeIndex = math.floor(math.log(mass - 90, 10) + 0.1)
-    return sizeIndex, machineSizes[sizeIndex]
-end
-
+-- These are not quite accurate, yet
 densities = {
     Bauxite=1.281;
     Coal=1.35;
@@ -123,6 +53,101 @@ densities = {
     Vanadium=6;
 }
 
+function slotValid(slot)
+    return slot 
+    and type(slot) == "table"
+    and type(slot.export) == "table"
+    and slot.getElementClass
+end
+
+local displays = {}
+local containers = {}
+function onStart()
+    if display1 then displays[1] = display1 end
+    if display2 then displays[2] = display2 end
+    if display3 then displays[3] = display3 end
+    if display4 then displays[4] = display4 end
+    local displayIndex = 1
+    for slotName, slot in pairs(unit) do
+        if slotValid(slot) then
+            if slot.setHTML then 
+                slot.activate()
+                --displays[displayIndex] = slot
+                --displayIndex = displayIndex + 1
+            elseif not databank and slot.getStringValue then
+                databank = slot
+            elseif not core and slot.getConstructId then
+                core = slot
+            end
+        end
+    end
+
+    if not core then return end
+
+    function addContainer(id)
+        if not string.match(core.getElementTypeById(id):lower(), "container") then return end
+        local name = core.getElementNameById(id)
+        if not name then return end
+
+        local substance = nil
+        if string.match(name, searchStringOre) then
+            --system.print("Ore container:"..name)
+            substance = string.gsub(name, searchStringOre, "")
+        elseif string.match(name, searchStringPure) then
+            --system.print("Pure container:"..name)
+            substance = string.gsub(name, searchStringPure, "")
+        else return end
+
+        if not substance or substance=="" then return end
+
+        local density = densities[substance]
+        if not density then return end
+
+        local maxHP = core.getElementMaxHitPointsById(id)
+        local containerSelfMass = 0.0
+        local capacity = 0.0
+        if maxHP > 49 and maxHP <= 123 then -- Hub
+        else
+            if maxHP > 123 and maxHP <= 998 then -- XS
+                containerSelfMass = 229.09
+                containerVolume = 1000.0
+            elseif maxHP > 998 and maxHP <= 7996 then -- S
+                containerSelfMass = 1280.0
+                containerVolume = 8000.0
+            elseif maxHP > 7996 and maxHP <= 17315 then -- M
+                containerSelfMass = 7420.0
+                containerVolume = 64000.0
+            elseif maxHP > 17315 then -- L
+                containerSelfMass = 14840.0
+                containerVolume = 128000.0
+            end
+            capacity = containerVolume*(1.0 + PlayerContainerProficiency/100)
+        end
+
+        --system.print("Adding container: "..name.. " ["..id.."]")
+        containers[id] = {name=name, id=id, substance=substance, capacity=capacity, selfMass=containerSelfMass, density=density}
+    end
+    
+    local elementsIds = core.getElementIdList()
+    for _,id in ipairs(elementsIds) do
+        addContainer(id)
+    end
+end
+ 
+function refreshScreens(force)
+    refreshOreScreens(displays[3], displays[4], force)
+    refreshIndustryScreens(displays[1], displays[2], force)
+end
+
+
+local machineSizes = {"XS", " S", " M", " L", "XL"}
+function assemblySize(id)
+    local mass = core.getElementMassById(id)
+    local sizeIndex = math.floor(math.log(mass - 90, 10) + 0.1)
+    return sizeIndex, machineSizes[sizeIndex]
+end
+
+-- colourblind friendly colours
 tolColours = {
     blue=   "#332288",
     cyan=   "#66CCEE",
@@ -171,73 +196,32 @@ function refreshOreScreens(displayLow, displayHigh, force)
     
     local outputData = {}
 
-    function processSubstanceContainer(id)
+    function processSubstanceContainer(container)
+        local contentMass = (core.getElementMassById(container.id) - container.selfMass) * (1.0 + PlayerContainerOptimization/100)
+        local volume = contentMass/container.density
 
-        local name = core.getElementNameById(id)
-        if not name then return end
-
-        local substance = nil
-        if string.match(name, searchStringOre) then
-            --system.print("Ore container:"..name)
-            substance = string.gsub(name, searchStringOre, "")
-        elseif string.match(name, searchStringPure) then
-            --system.print("Pure container:"..name)
-            substance = string.gsub(name, searchStringPure, "")
+        if volume>container.capacity then
+            system.print(container.name.." ["..container.id.."] : "..volume.." ".. container.capacity)
+            system.print("Substance : "..container.substance)
+            system.print("SelfMass : "..container.selfMass)
+            system.print("Content mass : "..contentMass)
+            system.print("Density : "..container.density)
         end
 
-        if not substance or substance=="" then return end
-
-        local substanceSingleMass = densities[substance]
-        if substanceSingleMass~=nil then
-            local maxHP = core.getElementMaxHitPointsById(id)
-            local containerSelfMass = 0.0
-            local capacity = 0.0
-            if maxHP > 49 and maxHP <= 123 then -- Hub
-            else
-                if maxHP > 123 and maxHP <= 998 then -- XS
-                    containerSelfMass = 229.09
-                    containerVolume = 1000.0
-                elseif maxHP > 998 and maxHP <= 7996 then -- S
-                    containerSelfMass = 1280.0
-                    containerVolume = 8000.0
-                elseif maxHP > 7996 and maxHP <= 17315 then -- M
-                    containerSelfMass = 7420.0
-                    containerVolume = 64000.0
-                elseif maxHP > 17315 then -- L
-                    containerSelfMass = 14840.0
-                    containerVolume = 128000.0
-                end
-                capacity = containerVolume*(1.0 + PlayerContainerProficiency/100)
-            end
-
-            local contentMass = (core.getElementMassById(id) - containerSelfMass) * (1.0 + PlayerContainerOptimization/100)
-            local volume = contentMass/substanceSingleMass
-
-            if volume>capacity then
-                system.print(name.." ["..id.."] : "..volume.." ".. capacity)
-                system.print("containerSelfMass : "..containerSelfMass)
-                system.print("contentMass : "..contentMass)
-                system.print("substanceSingleMass : "..substanceSingleMass)
-            end
-
-            if outputData[substance] then
-                outputData[substance].volume   = outputData[substance].volume   + volume;
-                outputData[substance].capacity = outputData[substance].capacity + capacity;
-            else
-                outputData[substance] = {
-                    name = substance;
-                    volume = volume;
-                    capacity = capacity;
-                }
-            end
+        if outputData[container.substance] then
+            outputData[container.substance].volume   = outputData[container.substance].volume   + volume;
+            outputData[container.substance].capacity = outputData[container.substance].capacity + container.capacity;
+        else
+            outputData[container.substance] = {
+                name = container.substance;
+                volume = volume;
+                capacity = container.capacity;
+            }
         end
     end
 
-    local elementsIds = core.getElementIdList()
-    for _,id in ipairs(elementsIds) do
-        if string.match(core.getElementTypeById(id):lower(), "container") then
-            processSubstanceContainer(id)
-        end
+    for _,container in pairs(containers) do
+        processSubstanceContainer(container)
     end
 
     function BarGraph(percent, colspan)
@@ -350,9 +334,12 @@ function refreshOreScreens(displayLow, displayHigh, force)
 
 end
 
+dataUpdates = {}
+assemblies = {}
+alerts = {}
 
 function refreshIndustryScreens(displayLow, displayHigh, force)
-    if not force and databank.hasKey("updated") and databank.getIntValue("updated")==0 then return end
+    --if not force and databank.hasKey("updated") and databank.getIntValue("updated")==0 then return end
 
     function AddHTMLRow(text1, text2, text3, colour, size)
         resHTML =
@@ -365,33 +352,45 @@ function refreshIndustryScreens(displayLow, displayHigh, force)
         return resHTML
     end
 
-    local assemblies = {}
-    local alerts = {}
-    local keys = json.decode(databank.getKeys())
-    for _,key in ipairs(keys) do
-        if key ~= "updated" then
-            local info = json.decode(databank.getStringValue(key))
-            if (data and type(info) == "table" and info.status and (force or info.updated==1)) then
-                --system.print(key.." status="..info.status)
-                local name = core.getElementNameById(key)
-                local machine = core.getElementTypeById(key)
-                if (machine=="assembly line") then
-                    local sizeIndex, size = assemblySize(key)
-                    --system.print(key.." Assembly "..assemblySize(key).." : "..info.status)
-                    assemblies[sizeIndex * 10000 + key] = {name=name, size=size, id=key, status=info.status}
-                else
-                    --system.print(key.." : "..machine.."["..name.."] : "..info.status)
-                    if info.status:find("JAMMED") == 1 then       
-                        --system.print(key.." : "..machine.."["..name.."] : "..info.status)
-                        alerts[key] = {name=name, machine=machine, id=key, status=info.status}
-                    end
-                end
-                info.updated = 0
-            end        
+
+    function processData(key)
+        if key == "updated" then return end
+
+        local info = json.decode(databank.getStringValue(key))
+        if (not info or type(info)~="table" or not info.status or (not force and info.updated~=1)) then 
+            --system.print("skipping "..key)
+            return 
+        end
+
+        if not force then system.print(key.." status="..info.status) end
+        local name = core.getElementNameById(key)
+        local machine = core.getElementTypeById(key)
+        if (machine=="assembly line") then
+            local sizeIndex, size = assemblySize(key)
+            --system.print(key.." Assembly "..assemblySize(key).." : "..info.status)
+            assemblies[sizeIndex * 10000 + key] = {name=name, size=size, id=key, status=info.status}
+        else
+            local alertKey = machine.."_"..name.."_"..key
+            --system.print(key.." : "..machine.."["..name.."] : "..info.status)
+            if info.status:find("JAMMED") == 1 then       
+                --system.print(key.." : "..machine.."["..name.."] : "..info.status)
+                alerts[alertKey] = {name=name, machine=machine, id=key, status=info.status}
+            else
+                alerts[alertKey] = nil
+            end
+        end
+        if info.updated==1 then
+            info.updated = 0
+            dataUpdates[key] = info
         end
     end
 
-    -- Sort the assemblies by size
+    local keys = json.decode(databank.getKeys())
+    for _,key in ipairs(keys) do
+        processData(key)
+    end
+
+    -- Sort the assemblies
     local tkeys = {}
     for k in pairs(assemblies) do table.insert(tkeys, k) end
     table.sort(tkeys)
@@ -423,12 +422,18 @@ function refreshIndustryScreens(displayLow, displayHigh, force)
         displayLow.setHTML(html)
     end
 
+    -- Sort the alerts
+    local alertkeys = {}
+    for k in pairs(alerts) do table.insert(alertkeys, k) end
+    table.sort(alertkeys)
+
     if displayHigh then
         local html=H.h1..H.d1..H.t1
 
         html=html..H.r1..H.thL.."&nbsp;"..H.the..H.thL.."Machine"..H.the..H.thR.."#&nbsp;"..H.the..H.thL.."Alert"..H.the..H.re
 
-        for _, alert in pairs(alerts) do
+        for _, k in ipairs(alertkeys) do
+            local alert = alerts[k]
             local colour = alarmColour
             local status = alert.status
             if status == "JAMMED_MISSING_INGREDIENT" then       
@@ -444,33 +449,61 @@ function refreshIndustryScreens(displayLow, displayHigh, force)
         displayHigh.setHTML(html)
     end
 
-
-    databank.setIntValue("updated", 0)
 end
-
 
 function queryAllElements()
-
     elementsIds = core.getElementIdList()
-
     for _,id in ipairs(elementsIds) do    
         system.print(id.." : "..core.getElementTypeById(id).." name="..core.getElementNameById(id))      
+    end   
+end
+
+function processFirst()
+    system.print("Tick First")
+    refreshScreens(true)
+    unit.stopTimer("First")
+end
+
+function processDataUpdates()
+    if not databank then return end
+    --system.print("Tick WriteData")
+    local throttle = 11
+    for key, info in pairs(dataUpdates) do
+        throttle = throttle - 1
+        if throttle==0 then return end
+        system.print("Writing data for "..key)
+        databank.setStringValue(key, json.encode(info))
+        dataUpdates[key] = nil
     end
-    
+    if next(dataUpdates) == nil then databank.setIntValue("updated", 0) end
 end
 
-function queryAllKeys()
-    system.print("Query all keys in databank...")
-    local keys = json.decode(databank.getKeys())
-    for _,key in ipairs(keys) do
-        system.print(key.."="..databank.getStringValue(key))    
-    end  
+function processTick()   
+    --system.print("Tick Live")
+    local ok, msg = xpcall(function ()
+
+        refreshScreens(false)
+
+    end, traceback)
+
+    if not ok then
+      system.print(msg)
+    end
 end
 
+function onStop()
+    for _, slot in pairs(unit) do
+        if slotValid(slot) then
+            if slot.setHTML then slot.clear() end
+        end
+    end    
+end
+
+--unit.hide()
+system.print("InDUstry Status")
 local databank = nil
 onStart()
---queryAllKeys()
---queryAllElements()
 
-refreshScreens(true)
-unit.setTimer("Live", 10)
+unit.setTimer("First", 1)
+unit.setTimer("Live", 7)
+unit.setTimer("WriteData", 3)

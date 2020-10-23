@@ -48,7 +48,11 @@ function queryAllSlots()
     end
 end
 
-system.print("Board ["..self.getId().."] ON!")
+function onStop()
+    system.print("Board ["..self.getId().."] OFF")
+end
+
+system.print("Board ["..self.getId().."] ON")
 unit.hide()
 
 databank = nil
