@@ -1,56 +1,62 @@
 PlayerContainerProficiency = 30 --export Your Container Proficiency bonus in total percent (Skills->Mining and Inventory->Inventory Manager)
 PlayerContainerOptimization = 0 --export Your Container Optimization bonus in total percent (Skills->Mining and Inventory->Stock Control)
-LowLevel = 25 --export At which percent level do you want bars to be drawn in yellow (not red anymore)
-MediumLevel = 50 --export At which percent level do you want bars to be drawn in green (not yellow anymore)
-searchStringOre = " Ore" --export Your identifier for Ore Storage Containers (e.g. "Bauxite Ore"). Include the spaces if you change this!
-searchStringPure = "Pure " --export Your identifier for Pure Storage Containers (e.g. "Pure Aluminium"). Include the spaces if you change this!
+LowLevel = 25 --export Percent for low level indicator
+HighLevel = 50 --export Percent for high level indicator
+ContainerMatch = "C_(.+)" --export Match for single item Storage Container names (e.g. "C_Hematite")
+OverflowMatch = "O_(.+)" --export Match for single item Overflow Container names (e.g. "O_Hydrogen")
+US_Spellings = false --export Expect American spellings
 
--- These are not quite accurate, yet
-densities = {
-    Bauxite=1.281;
-    Coal=1.35;
-    Quartz=2.65;
-    Hematite=5.04;
-    Chromite=4.54;
-    Malachite=4;
-    Limestone=2.71;
-    Natron=1.55;
-    Petalite=2.41;
-    Garnierite=2.6;
-    Acanthite=7.2;
-    Pyrite=5.01;
-    Cobaltite=6.33;
-    Cryolite=2.95;
-    Kolbeckite=2.37;
-    GoldNuggets=19.3;
-    Rhodonite=3.76;
-    Columbite=5.38;
-    Illmenite=4.55;
-    Vanadinite=6.95;
+-- These densities are not quite accurate, yet
+properties = {
+    Bauxite = {density = 1.281, ore = true},
+    Coal = {density = 1.35,ore = true},
+    Quartz = {density = 2.65,ore = true},
+    Hematite = {density = 5.04,ore = true},
+    Chromite = {density = 4.54,ore = true},
+    Malachite = {density = 4.00,ore = true},
+    Limestone = {density = 2.71,ore = true},
+    Natron = {density = 1.55,ore = true},
+    Petalite = {density = 2.41,ore = true},
+    Garnierite = {density = 2.6,ore = true},
+    Acanthite = {density = 7.2,ore = true},
+    Pyrite = {density = 5.01,ore = true},
+    Cobaltite = {density = 6.33,ore = true},
+    Cryolite = {density = 2.95,ore = true},
+    Kolbeckite = {density = 2.37,ore = true},
+    GoldNuggets = {density = 19.3,ore = true},
+    Rhodonite = {density = 3.76,ore = true},
+    Columbite = {density = 5.38,ore = true},
+    Illmenite = {density = 4.55,ore = true},
+    Vanadinite = {density = 6.95,ore = true};
 
-    Oxygen=1;
-    Hydrogen=0.07;
+    Hydrogen = {density = 0.07006, short = "H₂"};
+    Oxygen = {density = 1.00013, short ="O₂"},
     
-    Aluminium=2.7;
-    Carbon=2.27;
-    Silicon=2.33;
-    Iron=7.85;
-    Calcium=1.55;
-    Chromium=7.19;
-    Copper=8.96;
-    Sodium=0.97;
-    Lithium=0.53;
-    Nickel=8.91;
-    Silver=10.49;
-    Sulfur=1.82;
-    Cobalt=8.9;
-    Fluorine=1.7;
-    Gold=19.3;
-    Scandium=2.98;
-    Manganese=7.21;
-    Niobium=8.57;
-    Titanium=4.51;
-    Vanadium=6;
+    Aluminium = {density = 2.7, usSpelling="Aluminum"},
+    Carbon = {density = 2.27},
+    Silicon = {density = 2.33},
+    Iron = {density = 7.85},
+    Calcium = {density = 1.55},
+    Chromium = {density = 7.19},
+    Copper = {density = 8.96},
+    Sodium = {density = 0.97},
+    Lithium = {density = 0.53},
+    Nickel = {density = 8.91},
+    Silver = {density = 10.49},
+    Sulfur = {density = 1.82},
+    Cobalt = {density = 8.9},
+    Fluorine = {density = 1.7},
+    Gold = {density = 19.3},
+    Scandium = {density = 2.98},
+    Manganese = {density = 7.21},
+    Niobium = {density = 8.57},
+    Titanium = {density = 4.51},
+    Vanadium = {density = 6.00};
+
+    Silumin = {density = 3.00},
+    Steel = {density = 8.05084},
+    AlFe = {density = 7.50};
+    Duralumin = {density = 6.00};
 }
 
 function slotValid(slot)
@@ -60,20 +66,17 @@ function slotValid(slot)
     and slot.getElementClass
 end
 
-local displays = {}
+local containerDisplays = {}
+local productionDisplays = {}
 local containers = {}
 function onStart()
-    if display1 then displays[1] = display1 end
-    if display2 then displays[2] = display2 end
-    if display3 then displays[3] = display3 end
-    if display4 then displays[4] = display4 end
-    local displayIndex = 1
+
     for slotName, slot in pairs(unit) do
         if slotValid(slot) then
             if slot.setHTML then 
+                local html = [[<div style="width:100vw"><div style="margin-top: 10px;padding: 0px;width: 100vw;display: inline-block;">Hamsters wake up ...</div></div>]] 
                 slot.activate()
-                --displays[displayIndex] = slot
-                --displayIndex = displayIndex + 1
+                slot.setHTML(html)
             elseif not databank and slot.getStringValue then
                 databank = slot
             elseif not core and slot.getConstructId then
@@ -84,48 +87,72 @@ function onStart()
 
     if not core then return end
 
+    for slotName, slot in pairs(unit) do
+        if slotValid(slot) then
+            if slot.setHTML then 
+                local id = slot.getId();
+                if id then
+                    local name = core.getElementNameById(id)
+                    if name=="ContDisplay1" then
+                        containerDisplays[1] = slot
+                    elseif name=="ContDisplay2" then
+                        containerDisplays[2] = slot
+                    elseif name=="ProdDisplay1" then
+                        productionDisplays[1] = slot
+                    elseif name=="ProdDisplay2" then
+                        productionDisplays[2] = slot
+                    end
+                end
+            end
+        end
+    end
+
+    function extractSubstanceName(name, match)
+        local substance = string.gsub(name, match, "")
+        -- TODO check American spellings?
+        return substance
+    end
+
+    -- returns container self mass, container base volume
+    function getBaseCointainerProperties(id)
+        local maxHP = core.getElementMaxHitPointsById(id)
+        if maxHP <= 123 then       -- Hub
+            return 0.0, 0.0
+        elseif maxHP <= 998 then   -- XS
+            return 229.09, 1000.0
+        elseif maxHP <= 7996 then  -- S
+            return 1281.31, 8000.0
+        elseif maxHP <= 17315 then -- M
+            return 7421.35, 64000.0
+        else                       -- L
+            return 14842.7, 128000.0
+        end
+    end
+
     function addContainer(id)
-        if not string.match(core.getElementTypeById(id):lower(), "container") then return end
+        if not core.getElementTypeById(id)=="container" then return end
         local name = core.getElementNameById(id)
         if not name then return end
 
-        local substance = nil
-        if string.match(name, searchStringOre) then
-            --system.print("Ore container:"..name)
-            substance = string.gsub(name, searchStringOre, "")
-        elseif string.match(name, searchStringPure) then
-            --system.print("Pure container:"..name)
-            substance = string.gsub(name, searchStringPure, "")
-        else return end
-
-        if not substance or substance=="" then return end
-
-        local density = densities[substance]
-        if not density then return end
-
-        local maxHP = core.getElementMaxHitPointsById(id)
-        local containerSelfMass = 0.0
-        local capacity = 0.0
-        if maxHP > 49 and maxHP <= 123 then -- Hub
-        else
-            if maxHP > 123 and maxHP <= 998 then -- XS
-                containerSelfMass = 229.09
-                containerVolume = 1000.0
-            elseif maxHP > 998 and maxHP <= 7996 then -- S
-                containerSelfMass = 1280.0
-                containerVolume = 8000.0
-            elseif maxHP > 7996 and maxHP <= 17315 then -- M
-                containerSelfMass = 7420.0
-                containerVolume = 64000.0
-            elseif maxHP > 17315 then -- L
-                containerSelfMass = 14840.0
-                containerVolume = 128000.0
+        local overflow = false
+        local substance = string.match(name, "^"..ContainerMatch)
+        if not substance then 
+            substance = string.match(name, "^"..OverflowMatch)
+            if not substance then
+                --system.print("Ignoring container: "..name.." ["..id.."]")
+                return 
             end
-            capacity = containerVolume*(1.0 + PlayerContainerProficiency/100)
+            overflow = true
         end
 
+        local property = properties[substance]
+        if not property then return end
+
+        local selfMass, baseVolume = getBaseCointainerProperties(id)
+        capacity = baseVolume*(1.0 + PlayerContainerProficiency/100)
+
         --system.print("Adding container: "..name.. " ["..id.."]")
-        containers[id] = {name=name, id=id, substance=substance, capacity=capacity, selfMass=containerSelfMass, density=density}
+        containers[id] = {name=name, id=id, substance=substance, capacity=capacity, selfMass=selfMass, property=property, overflow=overflow}
     end
     
     local elementsIds = core.getElementIdList()
@@ -133,12 +160,6 @@ function onStart()
         addContainer(id)
     end
 end
- 
-function refreshScreens(force)
-    refreshOreScreens(displays[3], displays[4], force)
-    refreshIndustryScreens(displays[1], displays[2], force)
-end
-
 
 local machineSizes = {"XS", " S", " M", " L", "XL"}
 function assemblySize(id)
@@ -166,56 +187,60 @@ local idleColour    = tolColours.cyan
 local neutralColour = tolColours.yellow
 local alarmColour   = tolColours.red
 
-local font = [[Monaco, monospace]]
+local font = [[monospace]]
 
 local H = {
     h1 = [[<head><style> .bar { text-align: left; vertical-align: top; border-radius: 0 0em 0em 0; } </style></head>]],
 
-    d1 = [[<div class="bootstrap" style="text-align:left; vertical-align: text-bottom;
+    d1 = [[<div class="bootstrap" style="text-transform:none; text-align:left; vertical-align: text-bottom;
     display: flex; flex-direction: column; justify-content: flex-end; align-items: flex-end; margin: auto;">]],
     de = [[</div>]],
 
-    t1 = [[<table style="text-transform: capitalize;Font-Family: ]]..font..[[;  font-size: 4em; table-layout: auto; width: 100vw;">]],
-    t2 = [[<table style="text-transform: capitalize;Font-Family: ]]..font..[[;  font-size: 2.6em; table-layout: auto; width: 100vw;">]],
+    t1 = [[<table style="Font-Family: ]]..font..[[;  font-size: 4em; table-layout: auto; width: 100vw;">]],
+    t2 = [[<table style="Font-Family: ]]..font..[[;  font-size: 2.6em; table-layout: auto; width: 100vw;">]],
     te = [[</table>]],
 
     r1 = [[<tr style="width:100vw; background-color: ]]..headerColour..[[; color: white;">]],
     r2 = [[<tr>]],
     re = [[</tr>]],
 
-    thL = [[<th style="text-align:left;">]],
-    thR = [[<th style="text-align:right;">]],
+    thL  = [[<th style="text-align:left; margin-left:20px">]],
+    thL2 = [[<th style="text-align:left; margin-left:20px" colspan="2">]],
+    thR  = [[<th style="text-align:right; margin-right:20px">]],
 
-    th3 = [[ <th style="background-color: ]]..headerColour..[[;">&nbsp;</th>]],
+    th3 = [[<th style="background-color: ]]..headerColour..[[;">&nbsp;</th>]],
     th4 = [[<th colspan=9>&nbsp;</th>]],
     the = [[</th>]]
 }
 
-function refreshOreScreens(displayLow, displayHigh, force)
+function refreshContainerDisplay(displayLow, displayHigh, force)
     -- Credit to badman74 for initial approach https://github.com/badman74/DU
     
     local outputData = {}
 
     function processSubstanceContainer(container)
         local contentMass = (core.getElementMassById(container.id) - container.selfMass) * (1.0 + PlayerContainerOptimization/100)
-        local volume = contentMass/container.density
+        local volume = contentMass/container.property.density
 
-        if volume>container.capacity then
-            system.print(container.name.." ["..container.id.."] : "..volume.." ".. container.capacity)
-            system.print("Substance : "..container.substance)
-            system.print("SelfMass : "..container.selfMass)
-            system.print("Content mass : "..contentMass)
-            system.print("Density : "..container.density)
+        if volume-container.capacity > .5 then
+            system.print(container.name.." ["..container.id.."] : volume > capacity")
+            system.print(volume.." > "..container.capacity)
+            system.print("Density : "..container.property.density.." => ".. string.format("%0.5f", contentMass / container.capacity))
         end
 
-        if outputData[container.substance] then
-            outputData[container.substance].volume   = outputData[container.substance].volume   + volume;
-            outputData[container.substance].capacity = outputData[container.substance].capacity + container.capacity;
+        local key = container.substance
+        if container.overflow then key = "O_"..container.substance end
+
+        --system.print("Processing Container "..container.name.." key:"..key)
+        if outputData[key] then
+            outputData[key].volume   = outputData[key].volume   + volume
+            outputData[key].capacity = outputData[key].capacity + container.capacity
         else
-            outputData[container.substance] = {
-                name = container.substance;
-                volume = volume;
-                capacity = container.capacity;
+            outputData[key] = {
+                substance = container.substance,
+                volume = volume,
+                capacity = container.capacity,
+                overflow = container.overflow,
             }
         end
     end
@@ -224,14 +249,16 @@ function refreshOreScreens(displayLow, displayHigh, force)
         processSubstanceContainer(container)
     end
 
-    function BarGraph(percent, colspan)
+    function statusColour(percent, reverse)
+        if reverse then percent = 100.0 - percent end
+        if percent <= LowLevel then return alarmColour end
+        if percent <= HighLevel then return neutralColour end
+        return goodColour
+    end
+
+    function barGraph(percent, reverse, colspan)
         if not colspan then colspan = 1 end
-        if percent <= 0 then barcolour = alarmColour
-        elseif percent > 0 and percent <= LowLevel then barcolour = alarmColour
-        elseif percent > LowLevel and percent <= MediumLevel then barcolour = neutralColour
-        elseif percent > MediumLevel then  barcolour = goodColour
-        else  barcolour = goodColour
-        end 
+        local barcolour = statusColour(percent, reverse)
         return [[<td class="bar" valign=top colspan="]]..colspan..[[">
         <svg>
             <rect x="0" y="1" rx="4" ry="4" height="2.5vw" width="17.2vw" stroke="white" stroke-width="1" rx="0" />
@@ -241,70 +268,95 @@ function refreshOreScreens(displayLow, displayHigh, force)
         </td>]]        
     end
 
-    function displayFormat(id)
-        if not outputData[id] then return "?", 0, "kℓ" end
-
-        local volume = outputData[id].volume
-        --system.print(id.." volume="..volume)
-        local percent = math.min(100.0 * volume / outputData[id].capacity, 100.0) -- densities are not accurate anough
-
-        if volume >= 1000000 then return string.format("%02.1f", volume/1000000), percent, "Mℓ" end
-        return string.format("%02.1f", volume/1000), percent, "kℓ"
+    function correctSpelling(text)
+        if US_Spellings and properties[text] and properties[text].usSpelling then return properties[text].usSpelling end
+        return text
     end
 
-    function AddHTMLRow(id1, id2)
-        local volume1, percent1, units1 = displayFormat(id1)
-        --system.print(id1.." volume="..volume1.." units="..units1.." percent="..percent1)
-        local volume2, percent2, units2 = displayFormat(id2)
-        --system.print(id2.." volume="..volume2.." units="..units2.." percent="..percent2)
+    function displayFormat(substance, overflow)
+        local text = correctSpelling(substance)
+
+        local key = substance
+        if overflow then key = "O_"..substance end
+        local substanceData = outputData[key]
+        if not substanceData then
+            if overflow then return nil end
+            return "?", 0.0, "kℓ", text
+        end
+        if overflow then
+            local short = properties[substance].short
+            if short then
+                text = short.." Overflow"
+            else
+                text = substance.." OF"
+            end
+        end
+
+        local volume = substanceData.volume
+        --system.print(key.." volume="..volume)
+        local percent = math.min(100.0 * volume / substanceData.capacity, 100.0) -- densities are not accurate enough
+
+        if volume >= 1000000 then return string.format("%02.1f", volume/1000000), percent, "Mℓ", text end
+        return string.format("%02.1f", volume/1000), percent, "kℓ", text
+    end
+
+    function newHTMLRow(id1, id2, overflow)
+        local volume1, percent1, units1, text1 = displayFormat(id1, overflow)
+        if not volume1 then return "" end
+        --system.print(text1.." volume="..volume1.." units="..units1.." percent="..percent1)
+        local volume2, percent2, units2, text2 = displayFormat(id2, overflow)
+        --system.print(text2.." volume="..volume2.." units="..units2.." percent="..percent2)
+        local converting = "⇒"
+        if overflow or not outputData[id1] or not outputData[id1].ore then converting = "&nbsp;" end
         resHTML = H.r2 
-            ..H.thL..id1..H.the
-            ..H.thR..volume1..units1.."&nbsp;"..H.the
-            ..BarGraph(percent1)
-            .."<th style=\"background-color: "..headerColour.."\">"..H.the
-            ..H.thR..id2..H.the
-            ..H.thR..volume2..units2.."&nbsp;"..H.the
-            ..BarGraph(percent2)
+            ..H.thL..text1..H.the
+            ..H.thR..volume1..units1..H.the
+            ..barGraph(percent1, overflow)
+            .."<th style=\"background-color: "..headerColour.."\">"..converting..H.the
+            ..H.thL..text2..H.the
+            ..H.thR..volume2..units2..H.the
+            ..barGraph(percent2, overflow)
             ..H.re
         return resHTML
     end
 
-    local th1 = [[<th style="width:17vw; text-align:left;">]]
-    local th2 = [[<th style="width:14vw; text-align:left;">Vol.</th>
-                  <th style="width:17vw; text-align:left;">Levels</th>]]
+    local th1 = [[<th style="width:18vw; text-align:left;">]]
+    local th2 = [[<th style="width:13vw; text-align:left;"></th>
+                  <th style="width:17vw; text-align:left;"></th>]]
     
-    function AddHTMLHeader(text1, text2)
+    function newHTMLHeader(text1, text2)
         return H.r1..th1..text1..H.the..th2..[[<th style="width:2vw"/>]]..th1..text2..H.the..th2
     end
     
     if displayLow then
         local html=H.h1..H.d1..H.t2
 
-        html=html..AddHTMLHeader("T3 Ores", "T3 Pures")
-        html=html..AddHTMLRow("Petalite", "Lithium")
-        html=html..AddHTMLRow("Garnierite", "Nickel")
-        html=html..AddHTMLRow("Pyrite", "Sulfur")
-        html=html..AddHTMLRow("Acanthite", "Silver")
+        html=html..newHTMLHeader("T3 Ores", "T3 Pures")
+        html=html..newHTMLRow("Petalite", "Lithium")
+        html=html..newHTMLRow("Garnierite", "Nickel")
+        html=html..newHTMLRow("Pyrite", "Sulfur")
+        html=html..newHTMLRow("Acanthite", "Silver")
 
-        html=html..AddHTMLHeader("T2 Ores", "T2 Pures")
-        html=html..AddHTMLRow("Natron", "Sodium")
-        html=html..AddHTMLRow("Malachite", "Copper")
-        html=html..AddHTMLRow("Limestone", "Calcium")
-        html=html..AddHTMLRow("Chromite", "Chromium")
+        html=html..newHTMLHeader("T2 Ores", "T2 Pures")
+        html=html..newHTMLRow("Natron", "Sodium")
+        html=html..newHTMLRow("Malachite", "Copper")
+        html=html..newHTMLRow("Limestone", "Calcium")
+        html=html..newHTMLRow("Chromite", "Chromium")
         
-        html=html..AddHTMLHeader("T1 Ores", "T1 Pures")
-        html=html..AddHTMLRow("Bauxite", "Aluminium")
-        html=html..AddHTMLRow("Coal", "Carbon")
-        html=html..AddHTMLRow("Hematite", "Iron")
-        html=html..AddHTMLRow("Quartz", "Silicon")
+        html=html..newHTMLHeader("T1 Ores", "T1 Pures")
+        html=html..newHTMLRow("Bauxite", "Aluminium")
+        html=html..newHTMLRow("Coal", "Carbon")
+        html=html..newHTMLRow("Hematite", "Iron")
+        html=html..newHTMLRow("Quartz", "Silicon")
 
-        html=html..AddHTMLHeader("H₂", "O₂")
-        html=html..AddHTMLRow("Hydrogen", "Oxygen")
+        html=html..newHTMLHeader("H₂", "O₂")
+        html=html..newHTMLRow("Hydrogen", "Oxygen")
+        html=html..newHTMLRow("Hydrogen", "Oxygen", true)
 
         --if oresIn then
             --system.print("Ore IN mass="..oresIn.getMass())
             --local oresInPercent = 100000 * outputdatabank.IN.amount * 1000 / outputdatabank.IN.capacity
-            --html=html.."<tr><th align=right>Ores IN</th>"..BarGraph(oresInPercent,7).."</tr>"
+            --html=html.."<tr><th align=right>Ores IN</th>"..barGraph(oresInPercent,7).."</tr>"
         --end
         
         html=html..H.r1..H.th4..H.re
@@ -315,17 +367,21 @@ function refreshOreScreens(displayLow, displayHigh, force)
     if displayHigh then
         local html=H.h1..H.d1..H.t2
 
-        html=html..AddHTMLHeader("T5 Ores", "T5 Pures")
-        html=html..AddHTMLRow("Rhodonite", "Manganese")
-        html=html..AddHTMLRow("Columbite", "Niobium")
-        html=html..AddHTMLRow("Illmenite", "Titanium")
-        html=html..AddHTMLRow("Vanadinite", "Vanadium")
+        html=html..newHTMLHeader("T5 Ores", "T5 Pures")
+        html=html..newHTMLRow("Rhodonite", "Manganese")
+        html=html..newHTMLRow("Columbite", "Niobium")
+        html=html..newHTMLRow("Illmenite", "Titanium")
+        html=html..newHTMLRow("Vanadinite", "Vanadium")
 
-        html=html..AddHTMLHeader("T4 Ores", "T4 Pures")
-        html=html..AddHTMLRow("Cobaltite", "Cobalt")
-        html=html..AddHTMLRow("Cryolite", "Fluorine")
-        html=html..AddHTMLRow("GoldNuggets", "Gold")
-        html=html..AddHTMLRow("Kolbeckite", "Scandium")
+        html=html..newHTMLHeader("T4 Ores", "T4 Pures")
+        html=html..newHTMLRow("Cobaltite", "Cobalt")
+        html=html..newHTMLRow("Cryolite", "Fluorine")
+        html=html..newHTMLRow("GoldNuggets", "Gold")
+        html=html..newHTMLRow("Kolbeckite", "Scandium")
+
+        html=html..newHTMLHeader("Alloys", "Alloys")
+        html=html..newHTMLRow("Silumin", "Steel")
+        html=html..newHTMLRow("AlFe", "Duralumin")
 
         html=html..H.r1..H.th4..H.re
         html=html..H.te..H.de
@@ -341,13 +397,14 @@ alerts = {}
 function refreshIndustryScreens(displayLow, displayHigh, force)
     --if not force and databank.hasKey("updated") and databank.getIntValue("updated")==0 then return end
 
-    function AddHTMLRow(text1, text2, text3, colour, size)
+    function newHTMLRow(text1, text2, text3, text4, colour, size)
         resHTML =
             [[<tr style="color: ]]..colour..[[; font-size: ]]..size..[[em;">>
                 ]]..H.thL..[[&nbsp;</th>
                 ]]..H.thL..text1..[[</th>
-                ]]..H.thR..text2..[[&nbsp;</th>
-                ]]..H.thL..text3..[[</th>
+                ]]..H.thL..text2..[[</th>
+                ]]..H.thR..text3..[[</th>
+                ]]..H.thL..text4..[[</th>
             </tr>]]
         return resHTML
     end
@@ -355,8 +412,11 @@ function refreshIndustryScreens(displayLow, displayHigh, force)
 
     function processData(key)
         if key == "updated" then return end
-
-        local info = json.decode(databank.getStringValue(key))
+        
+        local infoJson = databank.getStringValue(key)
+        if infoJson==nil or infoJson=="" then return end
+        local info = json.decode(infoJson)
+        
         if (not info or type(info)~="table" or not info.status or (not force and info.updated~=1)) then 
             --system.print("skipping "..key)
             return 
@@ -367,8 +427,12 @@ function refreshIndustryScreens(displayLow, displayHigh, force)
         local machine = core.getElementTypeById(key)
         if (machine=="assembly line") then
             local sizeIndex, size = assemblySize(key)
+            local product = ""
+            if not string.find(name, "%[") then
+                product = name
+            end
             --system.print(key.." Assembly "..assemblySize(key).." : "..info.status)
-            assemblies[sizeIndex * 10000 + key] = {name=name, size=size, id=key, status=info.status}
+            assemblies[sizeIndex * 10000 + key] = {name=name, size=size, id=key, product=product, status=info.status}
         else
             local alertKey = machine.."_"..name.."_"..key
             --system.print(key.." : "..machine.."["..name.."] : "..info.status)
@@ -385,7 +449,9 @@ function refreshIndustryScreens(displayLow, displayHigh, force)
         end
     end
 
-    local keys = json.decode(databank.getKeys())
+    local keyJson = databank.getKeys()
+    if keyJson==nil or keyJson=="" then return end
+    local keys = json.decode(keyJson)
     for _,key in ipairs(keys) do
         processData(key)
     end
@@ -398,7 +464,7 @@ function refreshIndustryScreens(displayLow, displayHigh, force)
     if displayLow then
         local html=H.h1..H.d1..H.t1
 
-        html=html..H.r1..H.thL.."&nbsp;"..H.the..H.thL.."Assembly Lines"..H.the..H.thR.."#&nbsp;"..H.the..H.thL.."Status"..H.the..H.re
+        html=html..H.r1..H.thL.."&nbsp;"..H.the..H.thL2.."Assm. - Making"..H.the..H.thR.."#&nbsp;"..H.the..H.thL.."Status"..H.the..H.re
 
         for _, k in ipairs(tkeys) do
             local assembly = assemblies[k]
@@ -415,7 +481,7 @@ function refreshIndustryScreens(displayLow, displayHigh, force)
                 colour = alarmColour
             end
             --system.print(assembly.size.." ["..assembly.id.."] :"..status.. " ("..colour..")")
-            html=html..AddHTMLRow(assembly.size, ""..assembly.id, status, colour, "1")
+            html=html..newHTMLRow(assembly.size, assembly.product, assembly.id.."&nbsp;", status, colour, "1")
         end
 
         html=html..H.te..H.de
@@ -430,7 +496,7 @@ function refreshIndustryScreens(displayLow, displayHigh, force)
     if displayHigh then
         local html=H.h1..H.d1..H.t1
 
-        html=html..H.r1..H.thL.."&nbsp;"..H.the..H.thL.."Machine"..H.the..H.thR.."#&nbsp;"..H.the..H.thL.."Alert"..H.the..H.re
+        html=html..H.r1..H.thL.."&nbsp;"..H.the..H.thL2.."Machine"..H.the..H.thR.."#"..H.the..H.thL.."Alert"..H.the..H.re
 
         for _, k in ipairs(alertkeys) do
             local alert = alerts[k]
@@ -442,7 +508,7 @@ function refreshIndustryScreens(displayLow, displayHigh, force)
             elseif status:find("JAMMED") == 1 then       
                 colour = alarmColour
             end
-            html=html..AddHTMLRow(alert.machine.." - "..alert.name, ""..alert.id, status, colour, "0.5")
+            html=html..newHTMLRow(alert.machine, alert.name, alert.id.."&nbsp;", status, colour, "0.5")
         end
 
         html=html..H.te..H.de
@@ -458,10 +524,15 @@ function queryAllElements()
     end   
 end
 
+function refreshScreens(force)
+    refreshContainerDisplay(containerDisplays[1], containerDisplays[2], force)
+    refreshIndustryScreens(productionDisplays[1], productionDisplays[2], force)
+end
+
 function processFirst()
     system.print("Tick First")
-    refreshScreens(true)
     unit.stopTimer("First")
+    refreshScreens(true)
 end
 
 function processDataUpdates()

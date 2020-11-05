@@ -1,13 +1,13 @@
 # InDUstrious
 Screens for a Dual Universe Industrial Control Room
 
-<img src="mon01.png" height="320" alt="Alerts"> <img src="mon02.png" height="320" alt="Ores & Pures">
+<img src="images/mon01.png" height="320" alt="Alerts"> <img src="images/mon02.png" height="320" alt="Ores & Pures">
 
 ### Introduction
 TBD
 
 ### How it works - Simple
-<img src="industrious_simple.png" height="320" alt="Diagram">
+<img src="images/industrious_simple.png" height="320" alt="Diagram">
 
 ### Installation - Simple
 #### Master Only
@@ -22,7 +22,7 @@ TBD
 
 ### How it works - Expanded (not working yet)
 #### Expanded
-<img src="industrious.png" height="320" alt="Diagram">
+<img src="images/industrious.png" height="320" alt="Diagram">
 
 ### Installation - Expanded
 #### Master
