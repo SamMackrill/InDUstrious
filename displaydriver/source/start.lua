@@ -384,7 +384,7 @@ function refreshContainerDisplay(displayLow, displayHigh, force)
 
         html=html..newHTMLHeader("Alloys", "Alloys")
         html=html..newHTMLRow("Silumin", "Steel")
-        html=html..newHTMLRow("AlFe", "Duralumin")
+        html=html..newHTMLRow("AlFe", "CaRefCu")
 
         html=html..H.r1..H.th4..H.re
         html=html..H.te..H.de

@@ -7,7 +7,7 @@ function slotValid(slot)
 end
 
 function onStatusChanged(slot)
-    system.print(slot.getId().." status=> "..slot.getStatus())
+    --system.print(slot.getId().." status=> "..slot.getStatus())
     storeStatus(slot)
 end
 
@@ -49,16 +49,16 @@ function queryAllSlots()
 end
 
 function onStop()
-    system.print("Board ["..self.getId().."] OFF")
+    --system.print("Board ["..self.getId().."] OFF")
 end
 
-system.print("Board ["..self.getId().."] ON")
+--system.print("Board ["..self.getId().."] ON")
 unit.hide()
 
 databank = nil
 searchForDataSlot()
 if not databank then
-    system.print("Databank not connected!")
+    system.print("Databank not connected to monitor board! "..self.getId())
     self.exit()
     return
 end
