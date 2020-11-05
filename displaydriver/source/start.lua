@@ -29,8 +29,8 @@ properties = {
     Illmenite = {density = 4.55,ore = true},
     Vanadinite = {density = 6.95,ore = true};
 
-    Hydrogen = {density = 0.07006, short = "H₂"};
-    Oxygen = {density = 1.00013, short ="O₂"},
+    Hydrogen = {density = 0.069785, short = "H₂"};
+    Oxygen = {density = 1.0000, short ="O₂"},
     
     Aluminium = {density = 2.7, usSpelling="Aluminum"},
     Carbon = {density = 2.27},
@@ -54,9 +54,12 @@ properties = {
     Vanadium = {density = 6.00};
 
     Silumin = {density = 3.00},
-    Steel = {density = 8.05084},
-    AlFe = {density = 7.50};
-    Duralumin = {density = 6.00};
+    Steel = {density = 8.05},
+    AlFe = {density = 7.50},
+    AlLi = {density = 2.50},
+    CaRefCu = {density = 8.10},
+    CuAg = {density = 9.20},
+    Duralumin = {density = 2.80};
 }
 
 function slotValid(slot)
@@ -225,7 +228,7 @@ function refreshContainerDisplay(displayLow, displayHigh, force)
         if volume-container.capacity > .5 then
             system.print(container.name.." ["..container.id.."] : volume > capacity")
             system.print(volume.." > "..container.capacity)
-            system.print("Density : "..container.property.density.." => ".. string.format("%0.5f", contentMass / container.capacity))
+            system.print("Density : "..container.property.density.." => ".. string.format("%0.6f", contentMass / container.capacity))
         end
 
         local key = container.substance
