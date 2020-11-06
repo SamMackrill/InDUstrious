@@ -10,6 +10,8 @@ Screen based factory monitor, simulating a real control room
 * Can monitor industry unit states and any issues
 * Supports US spellings
 
+<img src="factory.png" height="320" alt="Factory">
+
 ### How it works - Simple
 <img src="industrious_simple.png" height="320" alt="Diagram">
 
@@ -33,6 +35,9 @@ Screen based factory monitor, simulating a real control room
 * Optionally name the industry machines after what they are producing
 * Optionally add a button and relays to turn eveything on at once
 * Can tweak the behaviour by right clicking the master programming board -> Advanced -> Edit Lua Parameters
+
+<img src="menu.png" height="320" alt="Menu">
+<img src="settings.png" height="320" alt="Settings">
 
 ### How it works - Expanded (not working yet)
 #### Expanded
