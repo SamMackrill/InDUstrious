@@ -5,9 +5,10 @@ Screens for a Dual Universe Industrial Control Room
 
 ### Introduction
 Screen based factory monitor, simulating a real control room
-Can monitor contaner contents if they have a single item
-Can designate continers as overflows
-Can monitor industry unit states and any issues
+* Can monitor container contents if they have a single item
+* Can designate containers as overflows
+* Can monitor industry unit states and any issues
+* Supports US spellings
 
 ### How it works - Simple
 <img src="industrious_simple.png" height="320" alt="Diagram">
@@ -25,12 +26,13 @@ Can monitor industry unit states and any issues
   * ProdDisplay2
 * Paste the display driver config into the programming board
 * Add up to 9 monitor programming boards
-* Connect up to 9 industries and the databank to the monitor programming board
+* Connect up to 9 industries and the databank to the monitor programming board (any order, do not rename the slots)
 * Paste the monitor config into all the monitor programming boards
 * Name the containers as C_XXXX where XXXX is the name of what is being stored e.g. C_Bauxite
 * Name the overflow containers as O_XXXX where XXXX is the name of what is being stored e.g. O_Hydrogen
 * Optionally name the industry machines after what they are producing
 * Optionally add a button and relays to turn eveything on at once
+* Can tweak the behaviour by right clicking the master programming board -> Advanced -> Edit Lua Parameters
 
 ### How it works - Expanded (not working yet)
 #### Expanded
