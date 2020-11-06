@@ -4,7 +4,10 @@ Screens for a Dual Universe Industrial Control Room
 <img src="mon01.png" height="320" alt="Alerts"> <img src="mon02.png" height="320" alt="Ores & Pures">
 
 ### Introduction
-TBD
+Screen based factory monitor, simulating a real control room
+Can monitor contaner contents if they have a single item
+Can designate continers as overflows
+Can monitor industry unit states and any issues
 
 ### How it works - Simple
 <img src="industrious_simple.png" height="320" alt="Diagram">
@@ -12,10 +15,14 @@ TBD
 ### Installation - Simple
 #### Master Only
 * Add a databank
-* Add 4 large screens
+* Add 4 large screens, 2 x 2 layout seems best
 * Add a programming board
-* Connect the core and databank and screens to the programming board
-* Name the screens
+* Connect the core and databank and screens to the programming board (any order, do not rename the slots)
+* Name the screens exactly:
+  * ContDisplay1
+  * ContDisplay2
+  * ProdDisplay1
+  * ProdDisplay2
 * Paste the display driver config into the programming board
 * Add up to 9 monitor programming boards
 * Connect up to 9 industries and the databank to the monitor programming board
