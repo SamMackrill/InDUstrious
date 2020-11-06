@@ -36,8 +36,8 @@ Screen based factory monitor, simulating a real control room
 * Optionally add a button and relays to turn eveything on at once
 * Can tweak the behaviour by right clicking the master programming board -> Advanced -> Edit Lua Parameters
 
-<img src="menu.png" height="320" alt="Menu">
-<img src="settings.png" height="320" alt="Settings">
+<img src="menu.png" alt="Menu">
+<img src="settings.png" alt="Settings">
 
 ### How it works - Expanded (not working yet)
 #### Expanded
