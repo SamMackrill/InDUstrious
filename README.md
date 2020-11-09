@@ -1,5 +1,6 @@
 # InDUstrious
-Screens for a Dual Universe Industrial Control Room
+Screens for a Dual Universe Industrial Control Room, by Smacker: 
+###### In game: Smacker, Discord: Smacker#5268
 
 <img src="mon01.png" height="320" alt="Alerts"> <img src="mon02.png" height="320" alt="Ores & Pures">
 
@@ -18,7 +19,7 @@ Screen based factory monitor, simulating a real control room
 ### Installation - Simple
 #### Master Only
 * Add a databank
-* Add 4 large screens, 2 x 2 layout seems best
+* Add 4 large screens, 2 x 2 layout seems best (only tested on large screens)
 * Add a programming board
 * Connect the core and databank and screens to the programming board (any order, do not rename the slots)
 * Name the screens exactly:
