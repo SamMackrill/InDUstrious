@@ -61,3 +61,7 @@ Screen based factory monitor, simulating a real control room
 * Add a programming board
 * Connect the board to any local databanks and the master databank
 * Paste the repeater config into the programming board
+
+## Credits
+* badman74 for initial approach: https://github.com/badman74/DU
+* DU Open Source Initiative
