@@ -31,8 +31,8 @@ Screen based factory monitor, simulating a real control room
 * Add up to 9 monitor programming boards
 * Connect up to 9 industries and the databank to the monitor programming board (any order, do not rename the slots)
 * Paste the monitor config into all the monitor programming boards
-* Name the containers as C_XXXX where XXXX is the name of what is being stored e.g. C_Bauxite
-* Name the overflow containers as O_XXXX where XXXX is the name of what is being stored e.g. O_Hydrogen
+* Name the containers (including hubs) as C_XXXX where XXXX is the name of what is being stored e.g. C_Bauxite
+* Name the overflow containers (including hubs) as O_XXXX where XXXX is the name of what is being stored e.g. O_Hydrogen
 * Optionally name the industry machines after what they are producing
 * Optionally add a button and relays to turn eveything on at once
 * Can tweak the behaviour by right clicking the master programming board -> Advanced -> Edit Lua Parameters
