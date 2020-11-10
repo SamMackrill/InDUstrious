@@ -11,6 +11,9 @@ Screen based factory monitor, simulating a real control room
 * Can monitor industry unit states and any issues
 * Supports US spellings
 
+### Notes
+* Restart the master board if you rename anything
+
 Wiki has FAQ: https://github.com/SamMackrill/InDUstrious/wiki 
 
 <img src="factory.png" height="320" alt="Factory">
@@ -21,7 +24,7 @@ Wiki has FAQ: https://github.com/SamMackrill/InDUstrious/wiki
 ### Installation - Simple
 #### Master Only
 * Add a databank
-* Add 4 large screens, 2 x 2 layout seems best (only tested on large screens)
+* Add 4 large/medium screens, 2 x 2 layout of large screens seems best
 * Add a programming board
 * Connect the core and databank and screens to the programming board (any order, do not rename the slots)
 * Name the screens exactly:
