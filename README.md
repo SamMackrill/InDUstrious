@@ -11,6 +11,8 @@ Screen based factory monitor, simulating a real control room
 * Can monitor industry unit states and any issues
 * Supports US spellings
 
+Wiki has FAQ: https://github.com/SamMackrill/InDUstrious/wiki 
+
 <img src="factory.png" height="320" alt="Factory">
 
 ### How it works - Simple
