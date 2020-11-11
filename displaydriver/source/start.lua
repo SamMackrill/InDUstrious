@@ -4,24 +4,26 @@ LowLevel = 25 --export Percent for low level indicator
 HighLevel = 50 --export Percent for high level indicator
 ContainerMatch = "C_(.+)" --export Match for single item Storage Container names (e.g. "C_Hematite")
 OverflowMatch = "O_(.+)" --export Match for single item Overflow Container names (e.g. "O_Hydrogen")
+Font_Size = 0.8 --export Assembly display font size, decrease this if you have many assemblers
+--Skip_Headings = true --export No substance headings
 US_Spellings = false --export Expect American spellings
 
--- These densities are not quite accurate, yet
+-- These densities are not all quite accurate, yet
 properties = {
-    Bauxite = {density = 1.281, ore = true},
-    Coal = {density = 1.35,ore = true},
-    Quartz = {density = 2.65,ore = true},
-    Hematite = {density = 5.04,ore = true},
+    Bauxite = {density = 1.2808, ore = true},
+    Coal = {density = 1.3465,ore = true},
+    Quartz = {density = 2.6498,ore = true},
+    Hematite = {density = 5.0398,ore = true},
     Chromite = {density = 4.54,ore = true},
-    Malachite = {density = 4.00,ore = true},
-    Limestone = {density = 2.71,ore = true},
-    Natron = {density = 1.55,ore = true},
-    Petalite = {density = 2.41,ore = true},
+    Malachite = {density = 3.9997,ore = true},
+    Limestone = {density = 2.7105,ore = true},
+    Natron = {density = 1.5499,ore = true},
+    Petalite = {density = 2.4119,ore = true},
     Garnierite = {density = 2.6,ore = true},
-    Acanthite = {density = 7.2,ore = true},
-    Pyrite = {density = 5.01,ore = true},
+    Acanthite = {density = 7.1995,ore = true},
+    Pyrite = {density = 5.0098,ore = true},
     Cobaltite = {density = 6.33,ore = true},
-    Cryolite = {density = 2.95,ore = true},
+    Cryolite = {density = 2.9495,ore = true},
     Kolbeckite = {density = 2.37,ore = true},
     GoldNuggets = {density = 19.3,ore = true},
     Rhodonite = {density = 3.76,ore = true},
@@ -32,26 +34,26 @@ properties = {
     Hydrogen = {density = 0.069785, short = "H₂"};
     Oxygen = {density = 1.0000, short ="O₂"},
     
-    Aluminium = {density = 2.7, usSpelling="Aluminum"},
-    Carbon = {density = 2.27},
-    Silicon = {density = 2.33},
-    Iron = {density = 7.85},
-    Calcium = {density = 1.55},
-    Chromium = {density = 7.19},
-    Copper = {density = 8.96},
-    Sodium = {density = 0.97},
-    Lithium = {density = 0.53},
-    Nickel = {density = 8.91},
-    Silver = {density = 10.49},
-    Sulfur = {density = 1.82},
-    Cobalt = {density = 8.9},
-    Fluorine = {density = 1.7},
-    Gold = {density = 19.3},
-    Scandium = {density = 2.98},
-    Manganese = {density = 7.21},
-    Niobium = {density = 8.57},
-    Titanium = {density = 4.51},
-    Vanadium = {density = 6.00};
+    Aluminium = {density = 2.7, usSpelling="Aluminum", short="Al"},
+    Carbon = {density = 2.27, short="C"},
+    Silicon = {density = 2.33, short="Si"},
+    Iron = {density = 7.85, short="Fe"},
+    Calcium = {density = 1.55, short="Ca"},
+    Chromium = {density = 7.19, short="Cr"},
+    Copper = {density = 8.96, short="Cu"},
+    Sodium = {density = 0.97, short="Na"},
+    Lithium = {density = 0.53, short="Li"},
+    Nickel = {density = 8.91, short="Ni"},
+    Silver = {density = 10.49, short="Ag"},
+    Sulfur = {density = 1.82, short="S"},
+    Cobalt = {density = 8.9, short="Co"},
+    Fluorine = {density = 1.7, short="Fl"},
+    Gold = {density = 19.3, short="Au"},
+    Scandium = {density = 2.98, short="Sc"},
+    Manganese = {density = 7.21, short="Mn"},
+    Niobium = {density = 8.57, short="Ni"},
+    Titanium = {density = 4.51, short="Ti"},
+    Vanadium = {density = 6.00, short="Va"};
 
     Silumin = {density = 3.00},
     Steel = {density = 8.05},
@@ -60,6 +62,7 @@ properties = {
     CaRefCu = {density = 8.10},
     CuAg = {density = 9.20},
     Duralumin = {density = 2.80};
+    ["Stainless steel"] = {density = 7.75, short="S.Steel"};
 }
 
 function slotValid(slot)
@@ -155,7 +158,16 @@ function onStart()
         capacity = baseVolume*(1.0 + PlayerContainerProficiency/100)
 
         --system.print("Adding container: "..name.. " ["..id.."]")
-        containers[id] = {name=name, id=id, substance=substance, capacity=capacity, selfMass=selfMass, property=property, overflow=overflow}
+        containers[id] = {
+            name=name, 
+            id=id, 
+            substance=substance, 
+            capacity=capacity, 
+            selfMass=selfMass, 
+            property=property, 
+            overflow=overflow,
+            isHub=baseVolume==0,
+        }
     end
     
     local elementsIds = core.getElementIdList()
@@ -213,7 +225,10 @@ local H = {
 
     th3 = [[<th style="background-color: ]]..headerColour..[[;">&nbsp;</th>]],
     th4 = [[<th colspan=9>&nbsp;</th>]],
-    the = [[</th>]]
+    the = [[</th>]],
+
+    nbr = [[<nobr>]],
+    nbre = [[</nobr>]],
 }
 
 function refreshContainerDisplay(displayLow, displayHigh, force)
@@ -225,27 +240,44 @@ function refreshContainerDisplay(displayLow, displayHigh, force)
         local contentMass = (core.getElementMassById(container.id) - container.selfMass) * (1.0 + PlayerContainerOptimization/100)
         local volume = contentMass/container.property.density
 
-        if volume-container.capacity > .5 then
-            system.print(container.name.." ["..container.id.."] : volume > capacity")
-            system.print(volume.." > "..container.capacity)
-            system.print("Density : "..container.property.density.." => ".. string.format("%0.6f", contentMass / container.capacity))
-        end
-
         local key = container.substance
         if container.overflow then key = "O_"..container.substance end
 
-        --system.print("Processing Container "..container.name.." key:"..key)
+        -- if container.substance=="Quartz" then
+        --     system.print("Processing Container "..container.name.." ["..container.id.."] key:"..key)
+        --     system.print(" Volume  : "..volume)
+        --     system.print(" Capacity: "..container.capacity)
+        --     system.print(" selfMass  : "..container.selfMass)
+        --     system.print(" contentMass: "..contentMass)
+        --     system.print(" isHub: "..tostring(container.isHub))
+        -- end
         if outputData[key] then
-            outputData[key].volume   = outputData[key].volume   + volume
-            outputData[key].capacity = outputData[key].capacity + container.capacity
+            outputData[key].volume      = outputData[key].volume   + volume
+            outputData[key].contentMass = outputData[key].contentMass + contentMass
+            outputData[key].capacity    = outputData[key].capacity + container.capacity
         else
             outputData[key] = {
                 substance = container.substance,
                 volume = volume,
+                contentMass = contentMass,
                 capacity = container.capacity,
                 overflow = container.overflow,
             }
         end
+        -- if container.substance=="Quartz" then
+        --     system.print("Totals "..key)
+        --     system.print(" Volume     : "..outputData[key].volume)
+        --     system.print(" Capacity   : "..outputData[key].capacity)
+        --     system.print(" ContentMass: "..outputData[key].contentMass)
+        -- end
+
+        -- if outputData[key].volume-container.capacity > .5 then
+        --     system.print(container.substance.." : volume > capacity")
+        --     system.print(outputData[key].volume.." > "..outputData[key].capacity)
+        --     system.print("contentMass : "..outputData[key].contentMass)
+        --     system.print("Density : "..container.property.density.." => ".. string.format("%0.6f", outputData[key].contentMass / outputData[key].capacity))
+        -- end
+
     end
 
     for _,container in pairs(containers) do
@@ -286,13 +318,16 @@ function refreshContainerDisplay(displayLow, displayHigh, force)
             if overflow then return nil end
             return "?", 0.0, "kℓ", text
         end
+
+        local short = properties[substance].short     
         if overflow then
-            local short = properties[substance].short
             if short then
                 text = short.." Overflow"
             else
-                text = substance.." OF"
+                text = text.." OF"
             end
+        elseif text:len() > 12 and short then
+            text = short
         end
 
         local volume = substanceData.volume
@@ -302,6 +337,9 @@ function refreshContainerDisplay(displayLow, displayHigh, force)
         if volume >= 1000000 then return string.format("%02.1f", volume/1000000), percent, "Mℓ", text end
         return string.format("%02.1f", volume/1000), percent, "kℓ", text
     end
+
+    
+    function cell(width, align) return [[<th style="width:]]..width..[[vw; text-align:]]..align..[[;">]]  end
 
     function newHTMLRow(id1, id2, overflow)
         local volume1, percent1, units1, text1 = displayFormat(id1, overflow)
@@ -356,12 +394,6 @@ function refreshContainerDisplay(displayLow, displayHigh, force)
         html=html..newHTMLRow("Hydrogen", "Oxygen")
         html=html..newHTMLRow("Hydrogen", "Oxygen", true)
 
-        --if oresIn then
-            --system.print("Ore IN mass="..oresIn.getMass())
-            --local oresInPercent = 100000 * outputdatabank.IN.amount * 1000 / outputdatabank.IN.capacity
-            --html=html.."<tr><th align=right>Ores IN</th>"..barGraph(oresInPercent,7).."</tr>"
-        --end
-        
         html=html..H.r1..H.th4..H.re
         html=html..H.te..H.de
         displayLow.setHTML(html)
@@ -385,6 +417,7 @@ function refreshContainerDisplay(displayLow, displayHigh, force)
         html=html..newHTMLHeader("Alloys", "Alloys")
         html=html..newHTMLRow("Silumin", "Steel")
         html=html..newHTMLRow("AlFe", "CaRefCu")
+        html=html..newHTMLRow("Stainless steel", "Duralumin")
 
         html=html..H.r1..H.th4..H.re
         html=html..H.te..H.de
@@ -412,7 +445,6 @@ function refreshIndustryScreens(displayLow, displayHigh, force)
         return resHTML
     end
 
-
     function processData(key)
         if key == "updated" then return end
         
@@ -425,7 +457,7 @@ function refreshIndustryScreens(displayLow, displayHigh, force)
             return 
         end
 
-        if not force then system.print(key.." status="..info.status) end
+        --if not force then system.print(key.." status="..info.status) end
         local name = core.getElementNameById(key)
         local machine = core.getElementTypeById(key)
         if (machine=="assembly line") then
@@ -484,7 +516,7 @@ function refreshIndustryScreens(displayLow, displayHigh, force)
                 colour = alarmColour
             end
             --system.print(assembly.size.." ["..assembly.id.."] :"..status.. " ("..colour..")")
-            html=html..newHTMLRow(assembly.size, assembly.product, assembly.id.."&nbsp;", status, colour, "1")
+            html=html..newHTMLRow(assembly.size, assembly.product, assembly.id.."&nbsp;", status, colour, Font_Size)
         end
 
         html=html..H.te..H.de
@@ -511,7 +543,7 @@ function refreshIndustryScreens(displayLow, displayHigh, force)
             elseif status:find("JAMMED") == 1 then       
                 colour = alarmColour
             end
-            html=html..newHTMLRow(alert.machine, alert.name, alert.id.."&nbsp;", status, colour, "0.5")
+            html=html..newHTMLRow(alert.machine, alert.name, alert.id.."&nbsp;", status, colour, Font_Size)
         end
 
         html=html..H.te..H.de
@@ -520,20 +552,13 @@ function refreshIndustryScreens(displayLow, displayHigh, force)
 
 end
 
-function queryAllElements()
-    elementsIds = core.getElementIdList()
-    for _,id in ipairs(elementsIds) do    
-        system.print(id.." : "..core.getElementTypeById(id).." name="..core.getElementNameById(id))      
-    end   
-end
-
 function refreshScreens(force)
     refreshContainerDisplay(containerDisplays[1], containerDisplays[2], force)
     refreshIndustryScreens(productionDisplays[1], productionDisplays[2], force)
 end
 
 function processFirst()
-    system.print("Tick First")
+    --system.print("Tick First")
     unit.stopTimer("First")
     refreshScreens(true)
 end
@@ -545,7 +570,7 @@ function processDataUpdates()
     for key, info in pairs(dataUpdates) do
         throttle = throttle - 1
         if throttle==0 then return end
-        system.print("Writing data for "..key)
+        --system.print("Writing data for "..key)
         databank.setStringValue(key, json.encode(info))
         dataUpdates[key] = nil
     end
