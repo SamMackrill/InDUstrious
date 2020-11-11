@@ -1,5 +1,6 @@
 # InDUstrious
-Screens for a Dual Universe Industrial Control Room
+Screens for a Dual Universe Industrial Control Room, by Smacker: 
+###### In game: Smacker, Discord: Smacker#5268
 
 <img src="mon01.png" height="320" alt="Alerts"> <img src="mon02.png" height="320" alt="Ores & Pures">
 
@@ -10,13 +11,20 @@ Screen based factory monitor, simulating a real control room
 * Can monitor industry unit states and any issues
 * Supports US spellings
 
+### Notes
+* Restart the master board if you rename anything
+
+Wiki has FAQ: https://github.com/SamMackrill/InDUstrious/wiki 
+
+<img src="factory.png" height="320" alt="Factory">
+
 ### How it works - Simple
 <img src="industrious_simple.png" height="320" alt="Diagram">
 
 ### Installation - Simple
 #### Master Only
 * Add a databank
-* Add 4 large screens, 2 x 2 layout seems best
+* Add 4 large/medium screens, 2 x 2 layout of large screens seems best
 * Add a programming board
 * Connect the core and databank and screens to the programming board (any order, do not rename the slots)
 * Name the screens exactly:
@@ -28,11 +36,14 @@ Screen based factory monitor, simulating a real control room
 * Add up to 9 monitor programming boards
 * Connect up to 9 industries and the databank to the monitor programming board (any order, do not rename the slots)
 * Paste the monitor config into all the monitor programming boards
-* Name the containers as C_XXXX where XXXX is the name of what is being stored e.g. C_Bauxite
-* Name the overflow containers as O_XXXX where XXXX is the name of what is being stored e.g. O_Hydrogen
+* Name the containers (including hubs) as C_XXXX where XXXX is the name of what is being stored e.g. C_Bauxite
+* Name the overflow containers (including hubs) as O_XXXX where XXXX is the name of what is being stored e.g. O_Hydrogen
 * Optionally name the industry machines after what they are producing
 * Optionally add a button and relays to turn eveything on at once
 * Can tweak the behaviour by right clicking the master programming board -> Advanced -> Edit Lua Parameters
+
+<img src="menu.png" alt="Menu">
+<img src="settings.png" alt="Settings">
 
 ### How it works - Expanded (not working yet)
 #### Expanded
@@ -55,3 +66,7 @@ Screen based factory monitor, simulating a real control room
 * Add a programming board
 * Connect the board to any local databanks and the master databank
 * Paste the repeater config into the programming board
+
+## Credits
+* badman74 for initial approach: https://github.com/badman74/DU
+* DU Open Source Initiative
