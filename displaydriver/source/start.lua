@@ -217,7 +217,7 @@ local H = {
     h1 = [[<head><style> .bar { text-align: left; vertical-align: top; border-radius: 0 0em 0em 0; } </style></head>]],
 
     d1 = [[<div class="bootstrap" style="text-transform:none; text-align:left; vertical-align: text-bottom;
-    display: flex; flex-direction: column; justify-content: flex-end; align-items: flex-end; margin: auto;">]],
+display: flex; flex-direction: column; justify-content: flex-end; align-items: flex-end; margin: auto;">]],
     de = [[</div>]],
 
     t1 = [[<table style="Font-Family: ]]..font..[[;  font-size: 4em; table-layout: auto; width: 100vw;">]],
@@ -304,12 +304,12 @@ function refreshContainerDisplay(displayLow, displayHigh, force)
         if not colspan then colspan = 1 end
         local barcolour = statusColour(percent, reverse)
         return [[<td class="bar" valign=top colspan="]]..colspan..[[">
-        <svg>
-            <rect x="0" y="1" rx="4" ry="4" height="2.5vw" width="17.2vw" stroke="white" stroke-width="1" rx="0" />
-            <rect x="1" y="2" rx="3" ry="3" height="2.4vw" width="]].. (17*percent/100) ..[[vw" fill="]] .. barcolour ..[[" opacity="1.0" rx="0" />
-            <text x="1" y="23" fill="white" text-align="left" margin-left="3" font-family="]]..font..[[">]].. string.format("%02.1f", percent) ..[[%</text>
-        </svg>
-        </td>]]        
+<svg>
+    <rect x="0" y="1" rx="4" ry="4" height="2.5vw" width="17.2vw" stroke="white" stroke-width="1" rx="0" />
+    <rect x="1" y="2" rx="3" ry="3" height="2.4vw" width="]].. (17*percent/100) ..[[vw" fill="]] .. barcolour ..[[" opacity="1.0" rx="0" />
+    <text x="1" y="23" fill="white" text-align="left" margin-left="3" font-family="]]..font..[[">]].. string.format("%02.1f", percent) ..[[%</text>
+</svg>
+</td>]]        
     end
 
     function correctSpelling(text)
@@ -372,7 +372,7 @@ function refreshContainerDisplay(displayLow, displayHigh, force)
 
     local th1 = [[<th style="width:18vw; text-align:left;">]]
     local th2 = [[<th style="width:13vw; text-align:left;"></th>
-                  <th style="width:17vw; text-align:left;"></th>]]
+<th style="width:17vw; text-align:left;"></th>]]
     
     function newHTMLHeader(text1, text2)
         return H.r1..th1..text1..H.the..th2..[[<th style="width:2vw"/>]]..th1..text2..H.the..th2
@@ -444,13 +444,13 @@ function refreshIndustryScreens(displayLow, displayHigh, force)
 
     function newHTMLRow(text1, text2, text3, text4, colour, size)
         resHTML =
-            [[<tr style="color: ]]..colour..[[; font-size: ]]..size..[[em;">>
-                ]]..H.thL..[[&nbsp;</th>
-                ]]..H.thL..H.nbr..text1..H.nbre..[[</th>
-                ]]..H.thL..H.nbr..text2..H.nbre..[[</th>
-                ]]..H.thR..H.nbr..text3..H.nbre..[[</th>
-                ]]..H.thL..H.nbr..text4..H.nbre..[[</th>
-            </tr>]]
+[[<tr style="color: ]]..colour..[[; font-size: ]]..size..[[em;">>
+]]..H.thL..[[&nbsp;</th>
+]]..H.thL..H.nbr..text1..H.nbre..[[</th>
+]]..H.thL..H.nbr..text2..H.nbre..[[</th>
+]]..H.thR..H.nbr..text3..H.nbre..[[</th>
+]]..H.thL..H.nbr..text4..H.nbre..[[</th>
+</tr>]]
         return resHTML
     end
 
