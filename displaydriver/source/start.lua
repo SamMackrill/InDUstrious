@@ -8,6 +8,7 @@ Font_Size = 0.8 --export Assembly display font size, decrease this if you have m
 --Skip_Headings = true --export No substance headings
 US_Spellings = false --export Expect American spellings
 
+
 -- These densities are not all quite accurate, yet
 properties = {
     Bauxite = {density = 1.2808, ore = true},
