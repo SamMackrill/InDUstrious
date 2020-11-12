@@ -18,54 +18,56 @@ Wiki has FAQ: https://github.com/SamMackrill/InDUstrious/wiki
 
 <img src="factory.png" height="320" alt="Factory">
 
-### How it works - Simple
-<img src="industrious_simple.png" height="320" alt="Diagram">
 
-### Installation - Simple
-#### Master Only
-* Add a databank
+## Installation
+* Name the containers (including hubs) as C_XXXX where XXXX is the name of what is being stored e.g. C_Bauxite
+* Name the overflow containers (including hubs) as O_XXXX where XXXX is the name of what is being stored e.g. O_Hydrogen
 * Add 4 large/medium screens, 2 x 2 layout of large screens seems best
-* Add a programming board
-* Connect the core and databank and screens to the programming board (any order, do not rename the slots)
-* Name the screens exactly:
+* Rename them exactly:
   * ContDisplay1
   * ContDisplay2
   * ProdDisplay1
   * ProdDisplay2
-* Paste the display driver config into the programming board
+
+### Installation - Simple
+#### How it works
+<img src="industrious_simple.png" height="320" alt="Diagram">
+
+#### Master Only
+* Add a databank
+* Add a programming board
+* Connect the core and databank and screens to the programming board (any order, do not rename the slots)
+* Paste the master config into the programming board
 * Add up to 9 monitor programming boards
 * Connect up to 9 industries and the databank to the monitor programming board (any order, do not rename the slots)
 * Paste the monitor config into all the monitor programming boards
-* Name the containers (including hubs) as C_XXXX where XXXX is the name of what is being stored e.g. C_Bauxite
-* Name the overflow containers (including hubs) as O_XXXX where XXXX is the name of what is being stored e.g. O_Hydrogen
-* Optionally name the industry machines after what they are producing
-* Optionally add a button and relays to turn eveything on at once
-* Can tweak the behaviour by right clicking the master programming board -> Advanced -> Edit Lua Parameters
 
+### Installation - Expanded
+#### How it works
+<img src="industrious.png" height="320" alt="Diagram">
+
+#### Master
+* Add a master databank
+* Add a master programming board
+* Connect the core, master databank and screens to the master programming board (any order, do not rename the slots)
+* Paste the master config into the master programming board
+#### Remote Monitor(s)
+* Add a remote databank
+* Add upto 9 programming boards
+* Connect up to 9 industries and the databank to each remote monitor programming board (any order, do not rename the slots)
+* Paste the monitor config into all the remote monitor programming boards
+#### Repeater(s)
+* Add a repeater programming board
+* Connect the repeater programming board to upto 9 remote databanks and the master databank (any order, do not rename the slots)
+* Paste the repeater config into the repeater programming board
+
+### Installation - Optional
+* Name the industry machines after what they are producing
+* Add a button and relays to turn eveything on at once
+* Tweak the behaviour by right clicking the master programming board -> Advanced -> Edit Lua Parameters
 <img src="menu.png" alt="Menu">
 <img src="settings.png" alt="Settings">
 
-### How it works - Expanded (not working yet)
-#### Expanded
-<img src="industrious.png" height="320" alt="Diagram">
-
-### Installation - Expanded
-#### Master
-* Add a databank
-* Add 4 screens
-* Add a programming board
-* Connect the core and databank and screens to the programming board
-* Paste the display driver config into the programming board
-#### Local Monitor
-* Add a databank
-* Add upto 9 programming boards
-* Connect upto 9 industries and the databank to the programming board
-* Paste the monitor config into all the programming boards
-#### Repeater(s)
-* Add a databank
-* Add a programming board
-* Connect the board to any local databanks and the master databank
-* Paste the repeater config into the programming board
 
 ## Credits
 * badman74 for initial approach: https://github.com/badman74/DU
