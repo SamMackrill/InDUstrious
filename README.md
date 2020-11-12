@@ -66,7 +66,7 @@ Wiki has FAQ: https://github.com/SamMackrill/InDUstrious/wiki
 * Add a button and relays to turn eveything on at once
 * Tweak the behaviour by right clicking the master programming board -> Advanced -> Edit Lua Parameters
 <img src="menu.png" height="320" alt="Menu">
-<img src="settings.png" height="320" alt="Settings">
+<img src="settings.png" alt="Settings">
 
 
 ## Credits
