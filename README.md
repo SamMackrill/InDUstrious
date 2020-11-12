@@ -65,8 +65,8 @@ Wiki has FAQ: https://github.com/SamMackrill/InDUstrious/wiki
 * Name the industry machines after what they are producing
 * Add a button and relays to turn eveything on at once
 * Tweak the behaviour by right clicking the master programming board -> Advanced -> Edit Lua Parameters
-<img src="menu.png" alt="Menu">
-<img src="settings.png" alt="Settings">
+<img src="menu.png" height="320" alt="Menu">
+<img src="settings.png" height="320" alt="Settings">
 
 
 ## Credits
