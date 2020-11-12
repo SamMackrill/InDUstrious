@@ -4,10 +4,16 @@ LowLevel = 25 --export Percent for low level indicator
 HighLevel = 50 --export Percent for high level indicator
 ContainerMatch = "C_(.+)" --export Match for single item Storage Container names (e.g. "C_Hematite")
 OverflowMatch = "O_(.+)" --export Match for single item Overflow Container names (e.g. "O_Hydrogen")
-Font_Size = 0.8 --export Assembly display font size, decrease this if you have many assemblers
-DataThrottle = 0.8 --export Maximum writes to process each update
+FontSize = 0.8 --export Assembly display font size, decrease this if you have many assemblers
+DataThrottle = 25 --export Maximum writes to process each update
 --Skip_Headings = true --export No substance headings
 US_Spellings = false --export Expect American spellings
+debugId = 853 --export Print diagnostics for this ID
+
+function debug(id, text)
+    if id~=debugId then return end
+    system.print("MAS#"..self.getId().." "..text)
+end
 
 -- These densities are not all quite accurate, yet
 properties = {
@@ -87,6 +93,7 @@ function onStart()
             elseif not databank and slot.getStringValue then
                 databank = slot
                 databank.setIntValue("master", 1)
+                if debugId>0 then databank.setIntValue("debugId", debugId) end
             elseif not core and slot.getConstructId then
                 core = slot
             end
@@ -448,50 +455,52 @@ function refreshIndustryScreens(displayLow, displayHigh, force)
     end
 
     function processData(key, force)
-        if string.match(key, "%D") then return end
+        --system.print("Process Data key="..key)
+        local id = tonumber(key)
+        if not id then return end
+        debug(id, "Processing #"..id)
         
-        local updated = databank.getIntValue(key.."_updated")
+        local updated = databank.getIntValue(id.."_updated")
         if not force and updated~=1 then
-            --system.print("skipping "..key.." (not changed)")
+            debug(id, "Skipping #"..id.." (not changed)")
             return 
         end
 
-        local infoJson = databank.getStringValue(key)
+        local infoJson = databank.getStringValue(id)
         if infoJson==nil or infoJson=="" then
-            system.print("skipping "..key.." (data missing)")
+            debug(id, "Skipping #"..id.." (data missing)")
             return 
         end
 
         local info = json.decode(infoJson)
         
         if (not info or type(info)~="table" or not info.status) then 
-            system.print("skipping "..key.." (data invalid)")
+            debug(id, "Skipping #"..id.." (data invalid)")
             return 
         end
 
-        --if not force then system.print(key.." status="..info.status) end
-        local name = core.getElementNameById(key)
-        local machine = core.getElementTypeById(key)
+        debug(id, id.." status="..info.status)
+        local name = core.getElementNameById(id)
+        local machine = core.getElementTypeById(id)
         if (machine=="assembly line") then
-            local sizeIndex, size = assemblySize(key)
+            local sizeIndex, size = assemblySize(id)
             local product = ""
             if not string.find(name, "%[") then
                 product = name
             end
-            --system.print(key.." Assembly "..assemblySize(key).." : "..info.status)
-            assemblies[sizeIndex * 10000 + key] = {name=name, size=size, id=key, product=product, status=info.status}
+            debug(id, id.." Assembly "..assemblySize(id).." : "..info.status)
+            assemblies[sizeIndex * 10000 + id] = {name=name, size=size, id=id, product=product, status=info.status}
         else
-            local alertKey = machine.."_"..name.."_"..key
-            --system.print(key.." : "..machine.."["..name.."] : "..info.status)
+            local alertKey = machine.."_"..name.."_"..id
+            debug(id, id.." : "..machine.."["..name.."] : "..info.status)
             if info.status:find("JAMMED") == 1 then       
-                --system.print(key.." : "..machine.."["..name.."] : "..info.status)
-                alerts[alertKey] = {name=name, machine=machine, id=key, status=info.status}
+                alerts[alertKey] = {name=name, machine=machine, id=id, status=info.status}
             else
                 alerts[alertKey] = nil
             end
         end
         if updated==1 then
-            dataUpdates[key] = 1
+            dataUpdates[id] = 1
         end
     end
 
@@ -528,7 +537,7 @@ function refreshIndustryScreens(displayLow, displayHigh, force)
                 colour = alarmColour
             end
             --system.print(assembly.size.." ["..assembly.id.."] :"..status.. " ("..colour..")")
-            html=html..newHTMLRow(assembly.size, assembly.product, assembly.id.."&nbsp;", status, colour, Font_Size)
+            html=html..newHTMLRow(assembly.size, assembly.product, assembly.id.."&nbsp;", status, colour, FontSize)
         end
 
         html=html..H.te..H.de
@@ -557,7 +566,7 @@ function refreshIndustryScreens(displayLow, displayHigh, force)
             end
             local type = alert.machine
             if type=="electronics industry" then type = "elec. ind." end
-            html=html..newHTMLRow(type, alert.name, alert.id.."&nbsp;", status, colour, Font_Size)
+            html=html..newHTMLRow(type, alert.name, alert.id.."&nbsp;", status, colour, FontSize)
         end
 
         html=html..H.te..H.de
@@ -584,7 +593,7 @@ function processDataUpdates()
     for key, info in pairs(dataUpdates) do
         maxToProcess = maxToProcess - 1
         if maxToProcess==0 then return end
-        system.print("Resetting update flag for "..key)
+        debug(key, "Resetting update flag for "..key)
         databank.setIntValue(key.."_updated", 0)
         dataUpdates[key] = nil
     end
@@ -616,6 +625,7 @@ end
 --unit.hide()
 system.print("InDUstry Status")
 local databank = nil
+if debugId > 0 then system.print("Debugging #"..debugId) end
 onStart()
 
 unit.setTimer("First", 1)

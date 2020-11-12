@@ -1,4 +1,5 @@
 function queryElement(id)
+    if not core then return end
     system.print(id.." in core")
     local name = core.getElementNameById(id)
     if not name then
@@ -16,12 +17,12 @@ function queryAllElements()
 end
 
 function dumpKeyValue(key)
-    system.print(key.." in databank")
 
-    if key == "updated" then
-        system.print(databank.getIntValue(key))
+    if key == "updated" or key=="master" or key=="debugId" then
+        system.print("databank \""..key.."\"="..databank.getIntValue(key))
         return
     end
+    system.print("databank \""..key.."\"")
     local infoJson = databank.getStringValue(key)
     if infoJson then
         system.print(infoJson)
@@ -46,8 +47,29 @@ function query(id)
     dumpKeyValue(id)
 end
 
+function slotValid(slot)
+    return slot 
+    and type(slot) == "table"
+    and type(slot.export) == "table"
+    and slot.getElementClass
+end
+
+function searchForDataSlot()
+    for _, slot in pairs(unit) do        
+        if slotValid(slot) and slot.getElementClass():lower() == 'databankunit' then
+            databank = slot
+            return
+        end
+    end
+end
+
+databank = nil
+searchForDataSlot()
+--databank.clear()
 --dataDump()
 --queryAllElements()
 
 dumpKeyValue("updated")
-query(200)
+dumpKeyValue("master")
+dumpKeyValue("debugId")
+query(853)

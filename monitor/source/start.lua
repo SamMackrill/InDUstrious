@@ -1,3 +1,7 @@
+function debug(id, text)
+  if id~=debugId then return end
+  system.print("MON#"..self.getId().." "..text)
+end
 
 function slotValid(slot)
     return slot 
@@ -7,7 +11,7 @@ function slotValid(slot)
 end
 
 function onStatusChanged(slot)
-    --system.print(slot.getId().." status=> "..slot.getStatus())
+    debug(slot.getId(), "#"..slot.getId().." status=> "..slot.getStatus())
     storeStatus(slot)
     databank.setIntValue("updated", 1)
 end
@@ -17,7 +21,7 @@ function storeStatus(slot)
     
     local id = slot.getId();
     if not id then return end
-    --system.print("Unit id:"..id)
+    debug(id, "Store Unit #"..id.." in databank")
     
     local info = {
        id = id,
@@ -36,6 +40,8 @@ function searchForDataSlot()
     for _, slot in pairs(unit) do        
         if slotValid(slot) and slot.getElementClass():lower() == 'databankunit' then
             databank = slot
+            debugId = databank.getIntValue("debugId")
+            if debugId > 0 then system.print("Debugging #"..debugId) end
             return
         end
     end
@@ -60,6 +66,7 @@ end
 unit.hide()
 
 databank = nil
+debugId = 0
 onStart()
 if not databank then
     system.print("Databank not connected to monitor board! "..self.getId())
