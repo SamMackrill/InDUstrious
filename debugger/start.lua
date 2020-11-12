@@ -40,9 +40,14 @@ function dataDump()
     end
 end
 
+function query(id)
+    queryElement(id)
+    dumpKeyValue(id.."_updated")
+    dumpKeyValue(id)
+end
+
 --dataDump()
 --queryAllElements()
 
 dumpKeyValue("updated")
-queryElement(49)
-dumpKeyValue("49")
+query(200)

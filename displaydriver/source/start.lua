@@ -5,64 +5,65 @@ HighLevel = 50 --export Percent for high level indicator
 ContainerMatch = "C_(.+)" --export Match for single item Storage Container names (e.g. "C_Hematite")
 OverflowMatch = "O_(.+)" --export Match for single item Overflow Container names (e.g. "O_Hydrogen")
 Font_Size = 0.8 --export Assembly display font size, decrease this if you have many assemblers
+DataThrottle = 0.8 --export Maximum writes to process each update
 --Skip_Headings = true --export No substance headings
 US_Spellings = false --export Expect American spellings
 
 -- These densities are not all quite accurate, yet
 properties = {
-    Bauxite = {density = 1.2808, ore = true},
-    Coal = {density = 1.3465,ore = true},
-    Quartz = {density = 2.6498,ore = true},
-    Hematite = {density = 5.0398,ore = true},
-    Chromite = {density = 4.54,ore = true},
-    Malachite = {density = 3.9997,ore = true},
-    Limestone = {density = 2.7105,ore = true},
-    Natron = {density = 1.5499,ore = true},
-    Petalite = {density = 2.4119,ore = true},
-    Garnierite = {density = 2.6,ore = true},
-    Acanthite = {density = 7.1995,ore = true},
-    Pyrite = {density = 5.0098,ore = true},
-    Cobaltite = {density = 6.33,ore = true},
-    Cryolite = {density = 2.9495,ore = true},
-    Kolbeckite = {density = 2.37,ore = true},
-    GoldNuggets = {density = 19.3,ore = true},
-    Rhodonite = {density = 3.76,ore = true},
-    Columbite = {density = 5.38,ore = true},
-    Illmenite = {density = 4.55,ore = true},
-    Vanadinite = {density = 6.95,ore = true};
+    Bauxite     = {density = 1.2808, ore = true},
+    Coal        = {density = 1.3465, ore = true},
+    Quartz      = {density = 2.6498, ore = true},
+    Hematite    = {density = 5.0398, ore = true},
+    Chromite    = {density = 4.54,   ore = true},
+    Malachite   = {density = 3.9997, ore = true},
+    Limestone   = {density = 2.7105, ore = true},
+    Natron      = {density = 1.5499, ore = true},
+    Petalite    = {density = 2.4119, ore = true},
+    Garnierite  = {density = 2.6,    ore = true},
+    Acanthite   = {density = 7.1995, ore = true},
+    Pyrite      = {density = 5.0098, ore = true},
+    Cobaltite   = {density = 6.33,   ore = true},
+    Cryolite    = {density = 2.9495, ore = true},
+    Kolbeckite  = {density = 2.37,   ore = true},
+    GoldNuggets = {density = 19.3,   ore = true},
+    Rhodonite   = {density = 3.76,   ore = true},
+    Columbite   = {density = 5.38,   ore = true},
+    Illmenite   = {density = 4.55,   ore = true},
+    Vanadinite  = {density = 6.95,   ore = true};
 
     Hydrogen = {density = 0.069785, short = "H₂"};
-    Oxygen = {density = 1.0000, short ="O₂"},
+    Oxygen   = {density = 1.0000,   short = "O₂"},
     
-    Aluminium = {density = 2.7, usSpelling="Aluminum", short="Al"},
-    Carbon = {density = 2.27, short="C"},
-    Silicon = {density = 2.33, short="Si"},
-    Iron = {density = 7.85, short="Fe"},
-    Calcium = {density = 1.55, short="Ca"},
-    Chromium = {density = 7.19, short="Cr"},
-    Copper = {density = 8.96, short="Cu"},
-    Sodium = {density = 0.97, short="Na"},
-    Lithium = {density = 0.53, short="Li"},
-    Nickel = {density = 8.91, short="Ni"},
-    Silver = {density = 10.49, short="Ag"},
-    Sulfur = {density = 1.82, short="S"},
-    Cobalt = {density = 8.9, short="Co"},
-    Fluorine = {density = 1.7, short="Fl"},
-    Gold = {density = 19.3, short="Au"},
-    Scandium = {density = 2.98, short="Sc"},
-    Manganese = {density = 7.21, short="Mn"},
-    Niobium = {density = 8.57, short="Ni"},
-    Titanium = {density = 4.51, short="Ti"},
-    Vanadium = {density = 6.00, short="Va"};
+    Aluminium = {density = 2.7,   short = "Al", usSpelling = "Aluminum"},
+    Carbon    = {density = 2.27,  short = "C"},
+    Silicon   = {density = 2.33,  short = "Si"},
+    Iron      = {density = 7.85,  short = "Fe"},
+    Calcium   = {density = 1.55,  short = "Ca"},
+    Chromium  = {density = 7.19,  short = "Cr"},
+    Copper    = {density = 8.96,  short = "Cu"},
+    Sodium    = {density = 0.97,  short = "Na"},
+    Lithium   = {density = 0.53,  short = "Li"},
+    Nickel    = {density = 8.91,  short = "Ni"},
+    Silver    = {density = 10.49, short = "Ag"},
+    Sulfur    = {density = 1.82,  short = "S"},
+    Cobalt    = {density = 8.9,   short = "Co"},
+    Fluorine  = {density = 1.7,   short = "Fl"},
+    Gold      = {density = 19.3,  short = "Au"},
+    Scandium  = {density = 2.98,  short = "Sc"},
+    Manganese = {density = 7.21,  short = "Mn"},
+    Niobium   = {density = 8.57,  short = "Ni"},
+    Titanium  = {density = 4.51,  short = "Ti"},
+    Vanadium  = {density = 6.00,  short = "Va"};
 
-    Silumin = {density = 3.00},
-    Steel = {density = 8.05},
-    AlFe = {density = 7.50},
-    AlLi = {density = 2.50},
-    CaRefCu = {density = 8.10},
-    CuAg = {density = 9.20},
-    Duralumin = {density = 2.80};
-    ["Stainless steel"] = {density = 7.75, short="S.Steel"};
+    Silumin             = {density = 3.00},
+    Steel               = {density = 8.05},
+    AlFe                = {density = 7.50},
+    AlLi                = {density = 2.50},
+    CaRefCu             = {density = 8.10},
+    CuAg                = {density = 9.20},
+    Duralumin           = {density = 2.80};
+    ["Stainless steel"] = {density = 7.75, short = "S.Steel"};
 }
 
 function slotValid(slot)
@@ -85,6 +86,7 @@ function onStart()
                 slot.setHTML(html)
             elseif not databank and slot.getStringValue then
                 databank = slot
+                databank.setIntValue("master", 1)
             elseif not core and slot.getConstructId then
                 core = slot
             end
@@ -350,11 +352,11 @@ function refreshContainerDisplay(displayLow, displayHigh, force)
         local converting = "⇒"
         if overflow or not outputData[id1] or not outputData[id1].ore then converting = "&nbsp;" end
         resHTML = H.r2 
-            ..H.thL..text1..H.the
+            ..H.thL..H.nbr..text1..H.nbre..H.the
             ..H.thR..volume1..units1..H.the
             ..barGraph(percent1, overflow)
             .."<th style=\"background-color: "..headerColour.."\">"..converting..H.the
-            ..H.thL..text2..H.the
+            ..H.thL..H.nbr..text2..H.nbre..H.the
             ..H.thR..volume2..units2..H.the
             ..barGraph(percent2, overflow)
             ..H.re
@@ -437,23 +439,33 @@ function refreshIndustryScreens(displayLow, displayHigh, force)
         resHTML =
             [[<tr style="color: ]]..colour..[[; font-size: ]]..size..[[em;">>
                 ]]..H.thL..[[&nbsp;</th>
-                ]]..H.thL..text1..[[</th>
-                ]]..H.thL..text2..[[</th>
-                ]]..H.thR..text3..[[</th>
-                ]]..H.thL..text4..[[</th>
+                ]]..H.thL..H.nbr..text1..H.nbre..[[</th>
+                ]]..H.thL..H.nbr..text2..H.nbre..[[</th>
+                ]]..H.thR..H.nbr..text3..H.nbre..[[</th>
+                ]]..H.thL..H.nbr..text4..H.nbre..[[</th>
             </tr>]]
         return resHTML
     end
 
-    function processData(key)
-        if key == "updated" then return end
+    function processData(key, force)
+        if string.match(key, "%D") then return end
         
+        local updated = databank.getIntValue(key.."_updated")
+        if not force and updated~=1 then
+            --system.print("skipping "..key.." (not changed)")
+            return 
+        end
+
         local infoJson = databank.getStringValue(key)
-        if infoJson==nil or infoJson=="" then return end
+        if infoJson==nil or infoJson=="" then
+            system.print("skipping "..key.." (data missing)")
+            return 
+        end
+
         local info = json.decode(infoJson)
         
-        if (not info or type(info)~="table" or not info.status or (not force and info.updated~=1)) then 
-            --system.print("skipping "..key)
+        if (not info or type(info)~="table" or not info.status) then 
+            system.print("skipping "..key.." (data invalid)")
             return 
         end
 
@@ -478,9 +490,8 @@ function refreshIndustryScreens(displayLow, displayHigh, force)
                 alerts[alertKey] = nil
             end
         end
-        if info.updated==1 then
-            info.updated = 0
-            dataUpdates[key] = info
+        if updated==1 then
+            dataUpdates[key] = 1
         end
     end
 
@@ -488,8 +499,9 @@ function refreshIndustryScreens(displayLow, displayHigh, force)
     if keyJson==nil or keyJson=="" then return end
     local keys = json.decode(keyJson)
     for _,key in ipairs(keys) do
-        processData(key)
+        processData(key, force)
     end
+    processDataUpdates()
 
     -- Sort the assemblies
     local tkeys = {}
@@ -543,7 +555,9 @@ function refreshIndustryScreens(displayLow, displayHigh, force)
             elseif status:find("JAMMED") == 1 then       
                 colour = alarmColour
             end
-            html=html..newHTMLRow(alert.machine, alert.name, alert.id.."&nbsp;", status, colour, Font_Size)
+            local type = alert.machine
+            if type=="electronics industry" then type = "elec. ind." end
+            html=html..newHTMLRow(type, alert.name, alert.id.."&nbsp;", status, colour, Font_Size)
         end
 
         html=html..H.te..H.de
@@ -566,14 +580,15 @@ end
 function processDataUpdates()
     if not databank then return end
     --system.print("Tick WriteData")
-    local throttle = 11
+    local maxToProcess = DataThrottle
     for key, info in pairs(dataUpdates) do
-        throttle = throttle - 1
-        if throttle==0 then return end
-        --system.print("Writing data for "..key)
-        databank.setStringValue(key, json.encode(info))
+        maxToProcess = maxToProcess - 1
+        if maxToProcess==0 then return end
+        system.print("Resetting update flag for "..key)
+        databank.setIntValue(key.."_updated", 0)
         dataUpdates[key] = nil
     end
+    -- TODO investigate race condition?
     if next(dataUpdates) == nil then databank.setIntValue("updated", 0) end
 end
 
