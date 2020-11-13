@@ -68,8 +68,14 @@ properties = {
     AlLi                = {density = 2.50},
     CaRefCu             = {density = 8.10},
     CuAg                = {density = 9.20},
-    Duralumin           = {density = 2.80};
+    Duralumin           = {density = 2.80},
     ["Stainless steel"] = {density = 7.75, short = "S.Steel"};
+
+    Polycarbonate  = {density = 1.4,  short = "Polycarb"},
+    Polycalcite    = {density = 1.5,  short = "Polycalc"},
+    Polysulfide    = {density = 1.6,  short = "Polysulf"},
+    Fluoropolymer  = {density = 1.65, short = "Fl.Poly"};
+
 }
 
 function slotValid(slot)
@@ -335,7 +341,7 @@ function refreshContainerDisplay(displayLow, displayHigh, force)
             else
                 text = text.." OF"
             end
-        elseif text:len() > 12 and short then
+        elseif text:len() > 10 and short then
             text = short
         end
 
@@ -422,6 +428,10 @@ function refreshContainerDisplay(displayLow, displayHigh, force)
         html=html..newHTMLRow("Cryolite", "Fluorine")
         html=html..newHTMLRow("GoldNuggets", "Gold")
         html=html..newHTMLRow("Kolbeckite", "Scandium")
+
+        html=html..newHTMLHeader("Plastic", "Plastic")
+        html=html..newHTMLRow("Polycarbonate", "Polycalcite")
+        html=html..newHTMLRow("Polysulfide", "Fluoropolymer")
 
         html=html..newHTMLHeader("Alloys", "Alloys")
         html=html..newHTMLRow("Silumin", "Steel")
