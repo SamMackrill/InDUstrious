@@ -21,7 +21,9 @@ Wiki has FAQ: https://github.com/SamMackrill/InDUstrious/wiki
 
 ## Installation
 * Name the containers (including hubs) as C_XXXX where XXXX is the name of what is being stored e.g. C_Bauxite
+  * If you have multiple containers and hubs with the same content then name them all the same
 * Name the overflow containers (including hubs) as O_XXXX where XXXX is the name of what is being stored e.g. O_Hydrogen
+* Some substance names cannot be matched exactly as NQ forbid certain characters in custom names (see below for list)
 * Add 4 large/medium screens, 2 x 2 layout of large screens seems best
 * Rename them exactly:
   * ContDisplay1
@@ -68,6 +70,17 @@ Wiki has FAQ: https://github.com/SamMackrill/InDUstrious/wiki
 <img src="menu.png" height="320" alt="Menu">
 <img src="settings.png" alt="Settings">
 
+## Substance name list
+
+_ | _ | _ | _ | _ | _ | _ | _
+-- | -- | -- | -- | -- | -- | -- | --
+Acanthite | AlFe | AlLi | Aluminium | Bauxite | Calcium | Carbon | CaRefCu
+Chromite | Chromium | Coal | Cobalt | Cobaltite | Columbite | Copper | Cryolite
+CuAg | Duralumin | Fluorine | Fluoropolymer | Garnierite | Gold | GoldNuggets | Hematite
+Hydrogen | Illmenite | Iron | Kolbeckite | Limestone | Lithium | Malachite | Manganese
+Natron | Nickel | Niobium | Oxygen | Petalite | Polycalcite | Polycarbonate | Polysulfide
+Pyrite | Quartz | Rhodonite | Scandium | Silicon | Silumin | Silver | Sodium
+Stainless steel | Steel | Sulfur | Titanium | Vanadinite | Vanadium
 
 ## Credits
 * badman74 for initial approach: https://github.com/badman74/DU
