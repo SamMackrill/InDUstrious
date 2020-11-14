@@ -13,6 +13,7 @@ Screen based factory monitor, simulating a real control room
 
 ### Notes
 * Restart the master board if you rename anything
+* Sometimes displays show as blank grey screens, restart the game to fix this
 
 Wiki has FAQ: https://github.com/SamMackrill/InDUstrious/wiki 
 
