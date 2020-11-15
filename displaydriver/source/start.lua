@@ -4,11 +4,15 @@ LowLevel = 25 --export Percent for low level indicator
 HighLevel = 50 --export Percent for high level indicator
 ContainerMatch = "C_(.+)" --export Match for single item Storage Container names (e.g. "C_Hematite")
 OverflowMatch = "O_(.+)" --export Match for single item Overflow Container names (e.g. "O_Hydrogen")
-FontSize = 0.8 --export Assembly display font size, decrease this if you have many assemblers
+ContRowsPerScreen = 19 --export Container rows per screen
+ProdRowsPerScreen = 16 --export Production rows per screen
 DataThrottle = 25 --export Maximum writes to process each update
---Skip_Headings = true --export No substance headings
+SkipHeadings = false --export No substance headings
 US_Spellings = false --export Expect American spellings
-debugId = 853 --export Print diagnostics for this ID
+
+FontSize = 11.2 / ProdRowsPerScreen
+
+debugId = 0 --export Print diagnostics for this ID, 0=OFF
 
 function debug(id, text)
     if id~=debugId then return end
@@ -93,7 +97,7 @@ function onStart()
     for slotName, slot in pairs(unit) do
         if slotValid(slot) then
             if slot.setHTML then 
-                local html = [[<div style="width:100vw"><div style="margin-top: 10px;padding: 0px;width: 100vw;display: inline-block;">Hamsters wake up ...</div></div>]] 
+                local html = [[<div style="width:100vw"><div style="margin-top: 10px;padding: 0px;width: 100vw;display: inline-block;">If you see this you need to rename the scrrens ...</div></div>]] 
                 slot.activate()
                 slot.setHTML(html)
             elseif not databank and slot.getStringValue then
@@ -118,10 +122,18 @@ function onStart()
                         containerDisplays[1] = slot
                     elseif name=="ContDisplay2" then
                         containerDisplays[2] = slot
+                    elseif name=="ContDisplay3" then
+                        containerDisplays[3] = slot
+                    elseif name=="ContDisplay4" then
+                        containerDisplays[4] = slot
                     elseif name=="ProdDisplay1" then
                         productionDisplays[1] = slot
                     elseif name=="ProdDisplay2" then
                         productionDisplays[2] = slot
+                    elseif name=="ProdDisplay3" then
+                        productionDisplays[3] = slot
+                    elseif name=="ProdDisplay4" then
+                        productionDisplays[4] = slot
                     end
                 end
             end
@@ -377,70 +389,95 @@ function refreshContainerDisplay(displayLow, displayHigh, force)
     end
 
     local th1 = [[<th style="width:18vw; text-align:left;">]]
-    local th2 = [[<th style="width:13vw; text-align:left;"></th>
-<th style="width:17vw; text-align:left;"></th>]]
+    local th2 = [[<th style="width:13vw; text-align:left;"></th><th style="width:17vw; text-align:left;"></th>]]
     
     function newHTMLHeader(text1, text2)
         return H.r1..th1..text1..H.the..th2..[[<th style="width:2vw"/>]]..th1..text2..H.the..th2
     end
     
-    if displayLow then
+    -- Add rows from the bottom up
+    local rows = {}
+
+    function addRow(t1, t2, overflow)
+        rows[#rows+1] = {text1=t1, text2=t2, overflow=overflow}
+    end
+
+    function addHeaderRow(t1, t2)
+        rows[#rows+1] = {text1=t1, text2=t2, header=true}
+    end
+
+    addHeaderRow("T5 Ores", "T5 Pures")
+    addRow("Rhodonite", "Manganese")
+    addRow("Columbite", "Niobium")
+    addRow("Illmenite", "Titanium")
+    addRow("Vanadinite", "Vanadium")
+
+    addHeaderRow("T4 Ores", "T4 Pures")
+    addRow("Cobaltite", "Cobalt")
+    addRow("Cryolite", "Fluorine")
+    addRow("GoldNuggets", "Gold")
+    addRow("Kolbeckite", "Scandium")
+
+    addHeaderRow("Plastic", "Plastic")
+    addRow("Polycarbonate", "Polycalcite")
+    addRow("Polysulfide", "Fluoropolymer")
+
+    addHeaderRow("Alloys", "Alloys")
+    addRow("Silumin", "Steel")
+    addRow("AlFe", "CaRefCu")
+    addRow("Stainless steel", "Duralumin")
+
+    addHeaderRow("T3 Ores", "T3 Pures")
+    addRow("Petalite", "Lithium")
+    addRow("Garnierite", "Nickel")
+    addRow("Pyrite", "Sulfur")
+    addRow("Acanthite", "Silver")
+
+    addHeaderRow("T2 Ores", "T2 Pures")
+    addRow("Natron", "Sodium")
+    addRow("Malachite", "Copper")
+    addRow("Limestone", "Calcium")
+    addRow("Chromite", "Chromium")
+
+    addHeaderRow("T1 Ores", "T1 Pures")
+    addRow("Bauxite", "Aluminium")
+    addRow("Hematite", "Iron")
+    addRow("Coal", "Carbon")
+    addRow("Quartz", "Silicon")
+
+    addHeaderRow("H₂", "O₂")
+    addRow("Hydrogen", "Oxygen")
+    addRow("Hydrogen", "Oxygen", true)
+
+    local rowIndex = 1
+
+    function addDisplayRows()
         local html=H.h1..H.d1..H.t2
 
-        html=html..newHTMLHeader("T3 Ores", "T3 Pures")
-        html=html..newHTMLRow("Petalite", "Lithium")
-        html=html..newHTMLRow("Garnierite", "Nickel")
-        html=html..newHTMLRow("Pyrite", "Sulfur")
-        html=html..newHTMLRow("Acanthite", "Silver")
+        while rowIndex <= ContRowsPerScreen do
+            local row = rows[rowIndex]
+            if not row then break end
+            if row.header then 
+                if not SkipHeadings then
+                     html=html..newHTMLHeader(row.text1, row.text2)
+                     rowIndex = rowIndex + 1
+                end
+            else
+                 html=html..newHTMLRow(row.text1, row.text2, row.overflow)
+                 rowIndex = rowIndex + 1
+            end
+        end
 
-        html=html..newHTMLHeader("T2 Ores", "T2 Pures")
-        html=html..newHTMLRow("Natron", "Sodium")
-        html=html..newHTMLRow("Malachite", "Copper")
-        html=html..newHTMLRow("Limestone", "Calcium")
-        html=html..newHTMLRow("Chromite", "Chromium")
-        
-        html=html..newHTMLHeader("T1 Ores", "T1 Pures")
-        html=html..newHTMLRow("Bauxite", "Aluminium")
-        html=html..newHTMLRow("Coal", "Carbon")
-        html=html..newHTMLRow("Hematite", "Iron")
-        html=html..newHTMLRow("Quartz", "Silicon")
-
-        html=html..newHTMLHeader("H₂", "O₂")
-        html=html..newHTMLRow("Hydrogen", "Oxygen")
-        html=html..newHTMLRow("Hydrogen", "Oxygen", true)
-
-        html=html..H.r1..H.th4..H.re
         html=html..H.te..H.de
-        displayLow.setHTML(html)
+        return html
+    end
+
+    if displayLow then
+        displayLow.setHTML(addDisplayRows())
     end
 
     if displayHigh then
-        local html=H.h1..H.d1..H.t2
-
-        html=html..newHTMLHeader("T5 Ores", "T5 Pures")
-        html=html..newHTMLRow("Rhodonite", "Manganese")
-        html=html..newHTMLRow("Columbite", "Niobium")
-        html=html..newHTMLRow("Illmenite", "Titanium")
-        html=html..newHTMLRow("Vanadinite", "Vanadium")
-
-        html=html..newHTMLHeader("T4 Ores", "T4 Pures")
-        html=html..newHTMLRow("Cobaltite", "Cobalt")
-        html=html..newHTMLRow("Cryolite", "Fluorine")
-        html=html..newHTMLRow("GoldNuggets", "Gold")
-        html=html..newHTMLRow("Kolbeckite", "Scandium")
-
-        html=html..newHTMLHeader("Plastic", "Plastic")
-        html=html..newHTMLRow("Polycarbonate", "Polycalcite")
-        html=html..newHTMLRow("Polysulfide", "Fluoropolymer")
-
-        html=html..newHTMLHeader("Alloys", "Alloys")
-        html=html..newHTMLRow("Silumin", "Steel")
-        html=html..newHTMLRow("AlFe", "CaRefCu")
-        html=html..newHTMLRow("Stainless steel", "Duralumin")
-
-        html=html..H.r1..H.th4..H.re
-        html=html..H.te..H.de
-        displayHigh.setHTML(html)
+        displayHigh.setHTML(addDisplayRows())
     end
 
 end
