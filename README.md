@@ -26,7 +26,7 @@ Wiki has FAQ: https://github.com/SamMackrill/InDUstrious/wiki
 * Name the overflow containers (including hubs) as O_XXXX where XXXX is the name of what is being stored e.g. O_Hydrogen
 * Some substance names cannot be matched exactly as NQ forbid certain characters in custom names (see below for list)
 * Add 4 large/medium screens, 2 x 2 layout of large screens seems best
-* Rename them exactly:
+* Rename the screens (not the slots) exactly:
   * ContDisplay1
   * ContDisplay2
   * ProdDisplay1
@@ -39,10 +39,10 @@ Wiki has FAQ: https://github.com/SamMackrill/InDUstrious/wiki
 #### Master Only
 * Add a databank
 * Add a programming board
-* Connect the core and databank and screens to the programming board (any order, do not rename the slots)
+* Connect the core and databank and screens to the programming board (any order, do not rename any of the slots)
 * Paste the master config into the programming board
 * Add up to 9 monitor programming boards
-* Connect up to 9 industries and the databank to the monitor programming board (any order, do not rename the slots)
+* Connect up to 9 industries and the databank to the monitor programming board (any order, do not rename any of the slots)
 * Paste the monitor config into all the monitor programming boards
 
 ### Installation - Expanded
