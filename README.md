@@ -1,6 +1,7 @@
 # InDUstrious
 Screens for a Dual Universe Industrial Control Room, by Smacker: 
 ###### In game: Smacker, Discord: Smacker#5268
+Discord Channel: https://discord.gg/Gw5HWJhXFR
 
 <img src="mon01.png" height="320" alt="Alerts"> <img src="mon02.png" height="320" alt="Ores & Pures">
 
@@ -8,10 +9,11 @@ Screens for a Dual Universe Industrial Control Room, by Smacker:
 Screen based factory monitor, simulating a real control room
 * Can monitor container contents if they have a single item
 * Can designate containers as overflows
-* Can monitor industry unit states and any issues
+* Can monitor industry unit states and display any issues
 * Supports US spellings
 
 ### Notes
+* Industry units running normally are not shown
 * Restart the master board if you rename anything
 * Sometimes displays show as blank grey screens, restart the game to fix this
 
