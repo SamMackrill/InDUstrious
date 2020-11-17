@@ -4,9 +4,12 @@ LowLevel = 25 --export Percent for low level indicator
 HighLevel = 50 --export Percent for high level indicator
 ContainerMatch = "C_(.+)" --export Match for single item Storage Container names (e.g. "C_Hematite")
 OverflowMatch = "O_(.+)" --export Match for single item Overflow Container names (e.g. "O_Hydrogen")
-ContRowsPerScreen = 19 --export Container rows per screen
+ContRowsPerScreen = 20 --export Container rows per screen
 ProdRowsPerScreen = 16 --export Production rows per screen
-DataThrottle = 25 --export Maximum writes to process each update
+AlignTop = false --export Align with top of screen
+WaitingAsAlarm = false --export Display waiting state with alarm colour
+KeepBlocksTogether = false  --Don't break blocks across displays
+DataThrottle = 15 --export Maximum writes to process each update, lower this if you get CPU overloads
 SkipHeadings = false --export No substance headings
 US_Spellings = false --export Expect American spellings
 
@@ -94,12 +97,16 @@ local productionDisplays = {}
 local containers = {}
 function onStart()
 
+    function setMessage(screen, text)
+        local html = [[<div style="width:100vw"><div style="margin-top: 20vw;padding: 10vw; font-size: 4em;width: 100vw;display: inline-block;">]]..text..[[</div></div>]] 
+        screen.setHTML(html)
+    end
+
     for slotName, slot in pairs(unit) do
         if slotValid(slot) then
             if slot.setHTML then 
-                local html = [[<div style="width:100vw"><div style="margin-top: 10px;padding: 0px;width: 100vw;display: inline-block;">If you see this you need to rename the scrrens ...</div></div>]] 
                 slot.activate()
-                slot.setHTML(html)
+                setMessage(slot, "If you see this you need to rename the screens...")
             elseif not databank and slot.getStringValue then
                 databank = slot
                 databank.setIntValue("master", 1)
@@ -118,22 +125,25 @@ function onStart()
                 local id = slot.getId();
                 if id then
                     local name = core.getElementNameById(id)
-                    if name=="ContDisplay1" then
-                        containerDisplays[1] = slot
-                    elseif name=="ContDisplay2" then
-                        containerDisplays[2] = slot
-                    elseif name=="ContDisplay3" then
-                        containerDisplays[3] = slot
-                    elseif name=="ContDisplay4" then
-                        containerDisplays[4] = slot
-                    elseif name=="ProdDisplay1" then
-                        productionDisplays[1] = slot
-                    elseif name=="ProdDisplay2" then
-                        productionDisplays[2] = slot
-                    elseif name=="ProdDisplay3" then
-                        productionDisplays[3] = slot
-                    elseif name=="ProdDisplay4" then
-                        productionDisplays[4] = slot
+                    local type, index = string.match(name, "(.*)Display(%d)")
+                    --system.print("Display type: "..type.." index:"..index)
+                    if type and index then
+                        index = tonumber(index)
+                        if type=="Cont" then
+                            if containerDisplays[index] then
+                                table.insert(containerDisplays[index], slot)
+                            else
+                                containerDisplays[index] = {slot}
+                            end
+                            setMessage(slot, "If you see this you may need to restart the master board")
+                        elseif type=="Prod" then
+                            if productionDisplays[index] then
+                                table.insert(productionDisplays[index], slot)
+                            else
+                                productionDisplays[index] = {slot}
+                            end
+                            setMessage(slot, "If you see this you may need to restart the master board")
+                        end
                     end
                 end
             end
@@ -229,25 +239,38 @@ local idleColour    = tolColours.cyan
 local neutralColour = tolColours.yellow
 local alarmColour   = tolColours.red
 
-local font = [[monospace]]
+local displayStyle = "alignBottom"
+if AlignTop then
+    displayStyle = "alignTop"
+end
+
+--{font-family: monospace;text-transform:none;text-align:left;vertical-align:text-bottom;padding:20px;display:flex;flex-direction: column;}
+
+local css = [[<style>
+.alignTop,.alignBottom,.bar{font-family:monospace;color:white;text-align:left}
+.alignTop,.alignBottom{display:flex;width:100vw;height:100vh}
+.alignBottom{justify-content:flex-end;align-items:flex-end;margin:auto}
+.bar{border-radius:4px}
+.bar::after {content: attr(lab);font-weight:500;padding:5px}
+table {width:100vw}
+td,th,table{margin:0;padding:0;}
+</style>]]
 
 local H = {
-    h1 = [[<head><style> .bar { text-align: left; vertical-align: top; border-radius: 0 0em 0em 0; } </style></head>]],
-
-    d1 = [[<div class="bootstrap" style="text-transform:none; text-align:left; vertical-align: text-bottom;
-display: flex; flex-direction: column; justify-content: flex-end; align-items: flex-end; margin: auto;">]],
+    d1 = [[<div class="]]..displayStyle..[[">]],
     de = [[</div>]],
 
-    t1 = [[<table style="Font-Family: ]]..font..[[;  font-size: 4em; table-layout: auto; width: 100vw;">]],
-    t2 = [[<table style="Font-Family: ]]..font..[[;  font-size: 2.6em; table-layout: auto; width: 100vw;">]],
+    t1 = [[<table style="font-size:4em;">]],
+    t2 = [[<table style="font-size:2.6em">]],
     te = [[</table>]],
 
     r1 = [[<tr style="width:100vw; background-color: ]]..headerColour..[[; color: white;">]],
     r2 = [[<tr>]],
     re = [[</tr>]],
 
-    thL  = [[<th style="text-align:left; margin-left:20px">]],
-    thL2 = [[<th style="text-align:left; margin-left:20px" colspan="2">]],
+    th = [[<th>]],
+    thL  = [[<th style="margin-left:20px">]],
+    thL2 = [[<th style="margin-left:20px" colspan="2">]],
     thR  = [[<th style="text-align:right; margin-right:20px">]],
 
     th3 = [[<th style="background-color: ]]..headerColour..[[;">&nbsp;</th>]],
@@ -258,7 +281,7 @@ display: flex; flex-direction: column; justify-content: flex-end; align-items: f
     nbre = [[</nobr>]],
 }
 
-function refreshContainerDisplay(displayLow, displayHigh, force)
+function refreshContainerDisplay(displays, force)
     -- Credit to badman74 for initial approach https://github.com/badman74/DU
     
     local outputData = {}
@@ -270,14 +293,6 @@ function refreshContainerDisplay(displayLow, displayHigh, force)
         local key = container.substance
         if container.overflow then key = "O_"..container.substance end
 
-        -- if container.substance=="Quartz" then
-        --     system.print("Processing Container "..container.name.." ["..container.id.."] key:"..key)
-        --     system.print(" Volume  : "..volume)
-        --     system.print(" Capacity: "..container.capacity)
-        --     system.print(" selfMass  : "..container.selfMass)
-        --     system.print(" contentMass: "..contentMass)
-        --     system.print(" isHub: "..tostring(container.isHub))
-        -- end
         if outputData[key] then
             outputData[key].volume      = outputData[key].volume   + volume
             outputData[key].contentMass = outputData[key].contentMass + contentMass
@@ -291,13 +306,6 @@ function refreshContainerDisplay(displayLow, displayHigh, force)
                 overflow = container.overflow,
             }
         end
-        -- if container.substance=="Quartz" then
-        --     system.print("Totals "..key)
-        --     system.print(" Volume     : "..outputData[key].volume)
-        --     system.print(" Capacity   : "..outputData[key].capacity)
-        --     system.print(" ContentMass: "..outputData[key].contentMass)
-        -- end
-
         -- if outputData[key].volume-container.capacity > .5 then
         --     system.print(container.substance.." : volume > capacity")
         --     system.print(outputData[key].volume.." > "..outputData[key].capacity)
@@ -318,16 +326,8 @@ function refreshContainerDisplay(displayLow, displayHigh, force)
         return goodColour
     end
 
-    function barGraph(percent, reverse, colspan)
-        if not colspan then colspan = 1 end
-        local barcolour = statusColour(percent, reverse)
-        return [[<td class="bar" valign=top colspan="]]..colspan..[[">
-<svg>
-    <rect x="0" y="1" rx="4" ry="4" height="2.5vw" width="17.2vw" stroke="white" stroke-width="1" rx="0" />
-    <rect x="1" y="2" rx="3" ry="3" height="2.4vw" width="]].. (17*percent/100) ..[[vw" fill="]] .. barcolour ..[[" opacity="1.0" rx="0" />
-    <text x="1" y="23" fill="white" text-align="left" margin-left="3" font-family="]]..font..[[">]].. string.format("%02.1f", percent) ..[[%</text>
-</svg>
-</td>]]        
+    function barGraph(width, percent, reverse)
+        return [[<td width=]]..width..[[><div class="bar" lab="]]..string.format("%02.1f", percent)..[[%" style="background-color:]]..statusColour(percent, reverse)..[[;width:]]..percent..[[%"/></td>]]        
     end
 
     function correctSpelling(text)
@@ -341,10 +341,6 @@ function refreshContainerDisplay(displayLow, displayHigh, force)
         local key = substance
         if overflow then key = "O_"..substance end
         local substanceData = outputData[key]
-        if not substanceData then
-            if overflow then return nil end
-            return "?", 0.0, "kℓ", text
-        end
 
         local short = properties[substance].short     
         if overflow then
@@ -357,6 +353,11 @@ function refreshContainerDisplay(displayLow, displayHigh, force)
             text = short
         end
 
+        if not substanceData then
+            if overflow then return nil end
+            return "?", 0.0, "kℓ", text
+        end
+
         local volume = substanceData.volume
         --system.print(key.." volume="..volume)
         local percent = math.min(100.0 * volume / substanceData.capacity, 100.0) -- densities are not accurate enough
@@ -366,7 +367,8 @@ function refreshContainerDisplay(displayLow, displayHigh, force)
     end
 
     
-    function cell(width, align) return [[<th style="width:]]..width..[[vw; text-align:]]..align..[[;">]]  end
+    function cellAlign(width, text, align) return [[<th width=]]..width..[[ style="text-align:]]..align..[[;"><nobr>]]..text..[[</nobr></th>]] end
+    function cell(width, text) return [[<th width=]]..width..[[<nobr>]]..text..[[</nobr></th>]] end
 
     function newHTMLRow(id1, id2, overflow)
         local volume1, percent1, units1, text1 = displayFormat(id1, overflow)
@@ -374,25 +376,24 @@ function refreshContainerDisplay(displayLow, displayHigh, force)
         --system.print(text1.." volume="..volume1.." units="..units1.." percent="..percent1)
         local volume2, percent2, units2, text2 = displayFormat(id2, overflow)
         --system.print(text2.." volume="..volume2.." units="..units2.." percent="..percent2)
-        local converting = "⇒"
-        if overflow or not outputData[id1] or not outputData[id1].ore then converting = "&nbsp;" end
-        resHTML = H.r2 
-            ..H.thL..H.nbr..text1..H.nbre..H.the
-            ..H.thR..volume1..units1..H.the
-            ..barGraph(percent1, overflow)
-            .."<th style=\"background-color: "..headerColour.."\">"..converting..H.the
-            ..H.thL..H.nbr..text2..H.nbre..H.the
-            ..H.thR..volume2..units2..H.the
-            ..barGraph(percent2, overflow)
+        local converting = "&nbsp;" -- "⇒"
+        --if overflow or not outputData[id1] or not outputData[id1].ore then converting = "&nbsp;" end
+        return H.r2 
+            ..cell("18%", text1)
+            ..cellAlign("13%", volume1..units1, "right")
+            ..barGraph("17%", percent1, overflow)
+            ..H.th..converting..H.the
+            ..cell("18%", text2)
+            ..cellAlign("13%", volume2..units2, "right")
+            ..barGraph("17%", percent2, overflow)
             ..H.re
-        return resHTML
     end
 
-    local th1 = [[<th style="width:18vw; text-align:left;">]]
-    local th2 = [[<th style="width:13vw; text-align:left;"></th><th style="width:17vw; text-align:left;"></th>]]
+    local th1 = [[<th width=18%>]]
+    local th2 = [[<th width=13%/><th width=17%/>]]
     
     function newHTMLHeader(text1, text2)
-        return H.r1..th1..text1..H.the..th2..[[<th style="width:2vw"/>]]..th1..text2..H.the..th2
+        return H.r1..[[<th width=48% colspan=3>]]..text1..[[</th><th/><th width=48% colspan=3>]]..text1..[[</th>]]..H.re
     end
     
     -- Add rows from the bottom up
@@ -403,10 +404,10 @@ function refreshContainerDisplay(displayLow, displayHigh, force)
     end
 
     function addHeaderRow(t1, t2)
-        rows[#rows+1] = {text1=t1, text2=t2, header=true}
+        if not SkipHeadings then rows[#rows+1] = {text1=t1, text2=t2, header=true} end
     end
 
-    addHeaderRow("T5 Ores", "T5 Pures")
+    addHeaderRow("T5 Ores", "T5 Pures")    -- 1
     addRow("Rhodonite", "Manganese")
     addRow("Columbite", "Niobium")
     addRow("Illmenite", "Titanium")
@@ -416,7 +417,7 @@ function refreshContainerDisplay(displayLow, displayHigh, force)
     addRow("Cobaltite", "Cobalt")
     addRow("Cryolite", "Fluorine")
     addRow("GoldNuggets", "Gold")
-    addRow("Kolbeckite", "Scandium")
+    addRow("Kolbeckite", "Scandium")       --10
 
     addHeaderRow("Plastic", "Plastic")
     addRow("Polycarbonate", "Polycalcite")
@@ -425,11 +426,11 @@ function refreshContainerDisplay(displayLow, displayHigh, force)
     addHeaderRow("Alloys", "Alloys")
     addRow("Silumin", "Steel")
     addRow("AlFe", "CaRefCu")
-    addRow("Stainless steel", "Duralumin")
-
+    addRow("Stainless steel", "Duralumin") -- 17    end - 19
+  
     addHeaderRow("T3 Ores", "T3 Pures")
     addRow("Petalite", "Lithium")
-    addRow("Garnierite", "Nickel")
+    addRow("Garnierite", "Nickel")         -- 20
     addRow("Pyrite", "Sulfur")
     addRow("Acanthite", "Silver")
 
@@ -441,45 +442,41 @@ function refreshContainerDisplay(displayLow, displayHigh, force)
 
     addHeaderRow("T1 Ores", "T1 Pures")
     addRow("Bauxite", "Aluminium")
-    addRow("Hematite", "Iron")
+    addRow("Hematite", "Iron")             -- 30
     addRow("Coal", "Carbon")
     addRow("Quartz", "Silicon")
 
     addHeaderRow("H₂", "O₂")
     addRow("Hydrogen", "Oxygen")
-    addRow("Hydrogen", "Oxygen", true)
+    addRow("Hydrogen", "Oxygen", true)     -- 35
 
-    local rowIndex = 1
-
-    function addDisplayRows()
-        local html=H.h1..H.d1..H.t2
-
-        while rowIndex <= ContRowsPerScreen do
-            local row = rows[rowIndex]
+    function addDisplayRows(dId)
+        local html=H.d1..H.t2
+        local startRow = #rows - ContRowsPerScreen * dId + 1
+        local endRow = startRow + ContRowsPerScreen - 1
+        startRow = math.max(startRow , 1)
+        --system.print("row range "..startRow..":"..endRow)
+        for i = startRow, endRow do
+            local row = rows[i]
             if not row then break end
             if row.header then 
-                if not SkipHeadings then
-                     html=html..newHTMLHeader(row.text1, row.text2)
-                     rowIndex = rowIndex + 1
-                end
+                html=html..newHTMLHeader(row.text1, row.text2)
             else
-                 html=html..newHTMLRow(row.text1, row.text2, row.overflow)
-                 rowIndex = rowIndex + 1
+                html=html..newHTMLRow(row.text1, row.text2, row.overflow)
             end
+            i = i + 1
         end
-
         html=html..H.te..H.de
         return html
     end
 
-    if displayLow then
-        displayLow.setHTML(addDisplayRows())
+    for d, display in pairs(displays) do
+        --system.print("Displaying on: "..core.getElementNameById(display.getId()).." @"..d)
+        local html = addDisplayRows(d)
+        for _, mirror in pairs(display) do
+            mirror.setHTML(css..html)
+        end
     end
-
-    if displayHigh then
-        displayHigh.setHTML(addDisplayRows())
-    end
-
 end
 
 dataUpdates = {}
@@ -565,7 +562,7 @@ function refreshIndustryScreens(displayLow, displayHigh, force)
     table.sort(tkeys)
 
     if displayLow then
-        local html=H.h1..H.d1..H.t1
+        local html=H.d1..H.t1
 
         html=html..H.r1..H.thL.."&nbsp;"..H.the..H.thL2.."Assm. - Making"..H.the..H.thR.."#&nbsp;"..H.the..H.thL.."Status"..H.the..H.re
 
@@ -573,12 +570,17 @@ function refreshIndustryScreens(displayLow, displayHigh, force)
             local assembly = assemblies[k]
             local colour = alarmColour
             local status = assembly.status
-            if status == "JAMMED_MISSING_INGREDIENT" then       
-                colour = neutralColour
+            if status == "JAMMED_MISSING_INGREDIENT" then
+                if WaitingAsAlarm then       
+                    colour = alarmColour
+                else
+                    colour = neutralColour
+                end
                 status = "WAITING"
             elseif status == "RUNNING" then       
                 colour = goodColour
-            elseif status == "STOPPED" then       
+            elseif status == "STOPPED" 
+                or status == "PENDING" then       
                 colour = idleColour
             elseif status:find("JAMMED") == 1 then       
                 colour = alarmColour
@@ -588,7 +590,9 @@ function refreshIndustryScreens(displayLow, displayHigh, force)
         end
 
         html=html..H.te..H.de
-        displayLow.setHTML(html)
+        for _, mirror in pairs(displayLow) do
+            mirror.setHTML(css..html)
+        end
     end
 
     -- Sort the alerts
@@ -596,8 +600,13 @@ function refreshIndustryScreens(displayLow, displayHigh, force)
     for k in pairs(alerts) do table.insert(alertkeys, k) end
     table.sort(alertkeys)
 
+    local shortTypes = {
+        ["electronics industry"] = "Elec. ind.",
+        ["chemical industry"] = "Chem. ind.",
+        ["metalworks industry"] = "Met. ind.",
+    }
     if displayHigh then
-        local html=H.h1..H.d1..H.t1
+        local html=H.d1..H.t1
 
         html=html..H.r1..H.thL.."&nbsp;"..H.the..H.thL2.."Machine"..H.the..H.thR.."#"..H.the..H.thL.."Alert"..H.the..H.re
 
@@ -606,24 +615,33 @@ function refreshIndustryScreens(displayLow, displayHigh, force)
             local colour = alarmColour
             local status = alert.status
             if status == "JAMMED_MISSING_INGREDIENT" then       
-                colour = neutralColour
+                if WaitingAsAlarm then       
+                    colour = alarmColour
+                else
+                    colour = neutralColour
+                end
                 status = "WAITING"
+            elseif status == "JAMMED_OUTPUT_FULL" then       
+                colour = alarmColour
+                status = "OUTPUT FULL"
             elseif status:find("JAMMED") == 1 then       
                 colour = alarmColour
             end
             local type = alert.machine
-            if type=="electronics industry" then type = "elec. ind." end
+            if shortTypes[type] then type = shortTypes[type] end
             html=html..newHTMLRow(type, alert.name, alert.id.."&nbsp;", status, colour, FontSize)
         end
 
         html=html..H.te..H.de
-        displayHigh.setHTML(html)
+        for _, mirror in pairs(displayHigh) do
+            mirror.setHTML(html)
+        end
     end
 
 end
 
 function refreshScreens(force)
-    refreshContainerDisplay(containerDisplays[1], containerDisplays[2], force)
+    refreshContainerDisplay(containerDisplays, force)
     refreshIndustryScreens(productionDisplays[1], productionDisplays[2], force)
 end
 
