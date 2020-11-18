@@ -3,7 +3,7 @@ Screens for a Dual Universe Industrial Control Room, by Smacker:
 ###### In game: Smacker, Discord: Smacker#5268
 Discord Channel: https://discord.gg/Gw5HWJhXFR
 
-<img src="mon01.png" height="320" alt="Alerts"> <img src="mon02.png" height="320" alt="Ores & Pures">
+<img src="images/mon01.png" height="320" alt="Alerts"> <img src="images/mon02.png" height="320" alt="Ores & Pures">
 
 ### Introduction
 Screen based factory monitor, simulating a real control room
@@ -19,7 +19,7 @@ Screen based factory monitor, simulating a real control room
 
 Wiki has FAQ: https://github.com/SamMackrill/InDUstrious/wiki 
 
-<img src="factory.png" height="320" alt="Factory">
+<img src="images/factory.png" height="320" alt="Factory">
 
 
 ## Installation
@@ -36,7 +36,7 @@ Wiki has FAQ: https://github.com/SamMackrill/InDUstrious/wiki
 
 ### Installation - Simple
 #### How it works
-<img src="industrious_simple.png" height="320" alt="Diagram">
+<img src="images/industrious_simple.png" height="320" alt="Diagram">
 
 #### Master Only
 * Add a databank
@@ -49,7 +49,7 @@ Wiki has FAQ: https://github.com/SamMackrill/InDUstrious/wiki
 
 ### Installation - Expanded
 #### How it works
-<img src="industrious.png" height="320" alt="Diagram">
+<img src="images/industrious.png" height="320" alt="Diagram">
 
 #### Master
 * Add a master databank
@@ -70,8 +70,8 @@ Wiki has FAQ: https://github.com/SamMackrill/InDUstrious/wiki
 * Name the industry machines after what they are producing
 * Add a button and relays to turn eveything on at once
 * Tweak the behaviour by right clicking the master programming board -> Advanced -> Edit Lua Parameters
-<img src="menu.png" height="320" alt="Menu">
-<img src="settings.png" alt="Settings">
+<img src="images/menu.png" height="320" alt="Menu">
+<img src="images/settings.png" alt="Settings">
 
 ## Substance name list
 

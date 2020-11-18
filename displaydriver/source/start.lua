@@ -1,3 +1,5 @@
+local version = "V1.2.0"
+
 PlayerContainerProficiency = 30 --export Your Container Proficiency bonus in total percent (Skills->Mining and Inventory->Inventory Manager)
 PlayerContainerOptimization = 0 --export Your Container Optimization bonus in total percent (Skills->Mining and Inventory->Stock Control)
 LowLevel = 25 --export Percent for low level indicator
@@ -732,7 +734,7 @@ function onStop()
 end
 
 --unit.hide()
-system.print("InDUstry Status")
+system.print("InDUstry Status "..version)
 local databank = nil
 --if debugId > 0 then system.print("Debugging #"..debugId) end
 onStart()
