@@ -17,13 +17,15 @@ Screen based factory monitor, simulating a real control room
 * Industry units running normally are not shown
 * Restart the master board if you rename anything
 * Sometimes displays show as blank grey screens, restart the game to fix this
+* Config links are to latest versions, for earlier versions see the releases
+  * To install in game on a programming board: Right-click -> Advanced -> Paste Lua configuration from clipboard
 
 Wiki has FAQ: https://github.com/SamMackrill/InDUstrious/wiki 
 
 <img src="images/factory.png" height="320" alt="Factory">
 
 
-## Installation
+## In Game Setup
 * Name the containers (including hubs) as C_XXXX where XXXX is the name of what is being stored e.g. C_Bauxite
   * If you have multiple containers and hubs with the same content then name them all the same
 * Name the overflow containers (including hubs) as O_XXXX where XXXX is the name of what is being stored e.g. O_Hydrogen
@@ -43,10 +45,10 @@ Wiki has FAQ: https://github.com/SamMackrill/InDUstrious/wiki
 * Add a databank
 * Add a programming board
 * Connect the core and databank and screens to the programming board (any order, do not rename any of the slots)
-* Paste the master config into the programming board
+* Copy the [master_config.json](https://raw.githubusercontent.com/SamMackrill/InDUstrious/main/displaydriver/config/master_config.json) and paste it into the programming board
 * Add up to 9 monitor programming boards
 * Connect up to 9 industries and the databank to the monitor programming board (any order, do not rename any of the slots)
-* Paste the monitor config into all the monitor programming boards
+* Copy the [monitor_config.json](https://raw.githubusercontent.com/SamMackrill/InDUstrious/main/monitor/config/monitor_config.json) and paste it into all the monitor programming boards
 
 ### Installation - Expanded
 #### How it works
@@ -56,16 +58,16 @@ Wiki has FAQ: https://github.com/SamMackrill/InDUstrious/wiki
 * Add a master databank
 * Add a master programming board
 * Connect the core, master databank and screens to the master programming board (any order, do not rename the slots)
-* Paste the master config into the master programming board
+* Copy the [master_config.json](https://raw.githubusercontent.com/SamMackrill/InDUstrious/main/displaydriver/config/master_config.json) and paste it into the programming board
 #### Remote Monitor(s)
 * Add a remote databank
 * Add upto 9 programming boards
 * Connect up to 9 industries and the databank to each remote monitor programming board (any order, do not rename the slots)
-* Paste the monitor config into all the remote monitor programming boards
+* Copy the [monitor_config.json](https://raw.githubusercontent.com/SamMackrill/InDUstrious/main/monitor/config/monitor_config.json) and paste it into all the monitor programming boards
 #### Repeater(s)
 * Add a repeater programming board
 * Connect the repeater programming board to upto 9 remote databanks and the master databank (any order, do not rename the slots)
-* Paste the repeater config into the repeater programming board
+* Copy the [repeater_config.json](https://raw.githubusercontent.com/SamMackrill/InDUstrious/main/repeater/config/repeater_config.json) and paste it into the programming board
 
 ### Installation - Optional
 * Name the industry machines after what they are producing
