@@ -9,7 +9,8 @@ Discord Channel: https://discord.gg/Gw5HWJhXFR
 Screen based factory monitor, simulating a real control room
 * Can monitor container contents if they have a single item
 * Can designate containers as overflows
-* Can monitor industry unit states and display any issues
+* Can monitor industry unit states and display any issues (like being jammed)
+  * Will not clutter the display with units that are in a normal state (running, pending, stopped etc)
 * Supports US spellings
 
 ### Notes
