@@ -416,7 +416,7 @@ function refreshContainerDisplay(displays, force)
     end
    
     function newHTMLHeader(row)
-        return H.tr2..[[<th width=48% colspan=3>]]..row.text1..[[</th><th/><th width=48% colspan=3>]]..row.text1..[[</th>]]..H.tre
+        return H.tr2..[[<th width=48% colspan=3>]]..row.text1..[[</th><th/><th width=48% colspan=3>]]..row.text2..[[</th>]]..H.tre
     end
     
     local rows = {}
