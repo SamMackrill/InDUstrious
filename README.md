@@ -29,10 +29,10 @@ Wiki has FAQ: https://github.com/SamMackrill/InDUstrious/wiki
 * Some substance names cannot be matched exactly as NQ forbid certain characters in custom names (see below for list)
 * Add 4 large/medium screens, 2 x 2 layout of large screens seems best
 * Rename the screens (not the slots) exactly:
-  * ContDisplay1
-  * ContDisplay2
-  * ProdDisplay1
-  * ProdDisplay2
+  * ContDisplay1, ContDisplay2, ContDisplay3 etc
+  * ProdDisplay1, ProdDisplay2, ProdDisplay3 etc
+  * You can have as many screeens as you have spare slots on the master board
+  * To mirror a display connect a screen with the same name e.g. add onothe screen called ContDisplay1
 
 ### Installation - Simple
 #### How it works
