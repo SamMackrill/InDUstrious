@@ -4,16 +4,28 @@ LowLevel = 25 --export Percent for low level indicator
 HighLevel = 50 --export Percent for high level indicator
 ContainerMatch = "C_(.+)" --export Match for single item Storage Container names (e.g. "C_Hematite")
 OverflowMatch = "O_(.+)" --export Match for single item Overflow Container names (e.g. "O_Hydrogen")
-FontSize = 0.8 --export Assembly display font size, decrease this if you have many assemblers
-DataThrottle = 25 --export Maximum writes to process each update
---Skip_Headings = true --export No substance headings
+ContRowsPerScreen = 20 --export Container rows per screen
+AssemRowsPerScreen = 16 --export Assembly rows per screen
+AlertRowsPerScreen = 24 -- Alert rows per screen
+AlignTop = false --export Align with top of screen
+WaitingAsAlarm = false --export Display waiting state with alarm colour
+KeepBlocksTogether = false  --Don't break blocks across displays
+DataThrottle = 15 --export Maximum writes to process each update, lower this if you get CPU overloads
+SkipHeadings = false --export No substance headings
 US_Spellings = false --export Expect American spellings
-debugId = 853 --export Print diagnostics for this ID
+contGap = 1.33 --export Cont Table gap
+prodGap = 0.4 --export Cont Table gap
 
-function debug(id, text)
-    if id~=debugId then return end
-    system.print("MAS#"..self.getId().." "..text)
-end
+assemFontSize = 100 / AssemRowsPerScreen - prodGap
+--alertFontSize = 100 / AlertRowsPerScreen - gap
+contFontSize = 100 / ContRowsPerScreen - contGap
+
+--debugId = 0 --export Print diagnostics for this ID, 0=OFF
+
+-- function debug(id, text)
+--     if id~=debugId then return end
+--     system.print("MAS#"..self.getId().." "..text)
+-- end
 
 -- These densities are not all quite accurate, yet
 properties = {
@@ -32,7 +44,7 @@ properties = {
     Cobaltite   = {density = 6.33,   ore = true},
     Cryolite    = {density = 2.9495, ore = true},
     Kolbeckite  = {density = 2.37,   ore = true},
-    GoldNuggets = {density = 19.3,   ore = true},
+    GoldNuggets = {density = 19.3,   ore = true, short="GoldNug"},
     Rhodonite   = {density = 3.76,   ore = true},
     Columbite   = {density = 5.38,   ore = true},
     Illmenite   = {density = 4.55,   ore = true},
@@ -78,6 +90,12 @@ properties = {
 
 }
 
+local shortTypes = {
+    ["electronics industry"] = "Elec. ind.",
+    ["chemical industry"] = "Chem. ind.",
+    ["metalworks industry"] = "Met. ind.",
+}
+
 function slotValid(slot)
     return slot 
     and type(slot) == "table"
@@ -90,16 +108,20 @@ local productionDisplays = {}
 local containers = {}
 function onStart()
 
+    function setMessage(screen, text)
+        local html = [[<div style="width:100vw"><div style="margin-top: 20vw;padding: 10vw; font-size: 4em;width: 100vw;display: inline-block;">]]..text..[[</div></div>]] 
+        screen.setHTML(html)
+    end
+
     for slotName, slot in pairs(unit) do
         if slotValid(slot) then
             if slot.setHTML then 
-                local html = [[<div style="width:100vw"><div style="margin-top: 10px;padding: 0px;width: 100vw;display: inline-block;">Hamsters wake up ...</div></div>]] 
                 slot.activate()
-                slot.setHTML(html)
+                setMessage(slot, "If you see this you need to rename the screens...")
             elseif not databank and slot.getStringValue then
                 databank = slot
                 databank.setIntValue("master", 1)
-                if debugId>0 then databank.setIntValue("debugId", debugId) end
+                --if debugId>0 then databank.setIntValue("debugId", debugId) end
             elseif not core and slot.getConstructId then
                 core = slot
             end
@@ -114,14 +136,25 @@ function onStart()
                 local id = slot.getId();
                 if id then
                     local name = core.getElementNameById(id)
-                    if name=="ContDisplay1" then
-                        containerDisplays[1] = slot
-                    elseif name=="ContDisplay2" then
-                        containerDisplays[2] = slot
-                    elseif name=="ProdDisplay1" then
-                        productionDisplays[1] = slot
-                    elseif name=="ProdDisplay2" then
-                        productionDisplays[2] = slot
+                    local type, index = string.match(name, "(.*)Display(%d)")
+                    --system.print("Display type: "..type.." index:"..index)
+                    if type and index then
+                        index = tonumber(index)
+                        if type=="Cont" then
+                            if containerDisplays[index] then
+                                table.insert(containerDisplays[index], slot)
+                            else
+                                containerDisplays[index] = {slot}
+                            end
+                            setMessage(slot, "If you see this you may need to restart the master board")
+                        elseif type=="Prod" then
+                            if productionDisplays[index] then
+                                table.insert(productionDisplays[index], slot)
+                            else
+                                productionDisplays[index] = {slot}
+                            end
+                            setMessage(slot, "If you see this you may need to restart the master board")
+                        end
                     end
                 end
             end
@@ -217,36 +250,57 @@ local idleColour    = tolColours.cyan
 local neutralColour = tolColours.yellow
 local alarmColour   = tolColours.red
 
-local font = [[monospace]]
+local displayStyle = "alignBottom"
+if AlignTop then
+    displayStyle = "alignTop"
+end
+
+--{font-family: monospace;text-transform:none;text-align:left;vertical-align:text-bottom;padding:20px;display:flex;flex-direction: column;}
+
+local css = [[<style>
+.alignTop,.alignBottom,.bar{font-family:monospace;color:white;text-align:left}
+.alignTop,.alignBottom{display:flex;width:100vw;height:100vh;padding:2px}
+.alignBottom{justify-content:flex-end;align-items:flex-end;margin:auto}
+.bar{border-radius:4px;border:1px solid white;margin:2px;}
+.bar::after{content: attr(lab);font-weight:600;padding:5px}
+table{width:100vw}
+td,th,table{margin:0;padding:0}
+</style>]]
 
 local H = {
-    h1 = [[<head><style> .bar { text-align: left; vertical-align: top; border-radius: 0 0em 0em 0; } </style></head>]],
+    d1 = [[<div class="]]..displayStyle..[[">]],
+    de = [[</div>]];
 
-    d1 = [[<div class="bootstrap" style="text-transform:none; text-align:left; vertical-align: text-bottom;
-display: flex; flex-direction: column; justify-content: flex-end; align-items: flex-end; margin: auto;">]],
-    de = [[</div>]],
+    tc = [[<table style="font-size:]]..contFontSize..[[vh">]],
+    tp = [[<table style="font-size:]]..assemFontSize..[[vh">]],
+    te = [[</table>]];
 
-    t1 = [[<table style="Font-Family: ]]..font..[[;  font-size: 4em; table-layout: auto; width: 100vw;">]],
-    t2 = [[<table style="Font-Family: ]]..font..[[;  font-size: 2.6em; table-layout: auto; width: 100vw;">]],
-    te = [[</table>]],
+    tr  = [[<tr>]],
+    tr2 = [[<tr style="background-color:]]..headerColour..[[;">]],
+    tre = [[</tr>]];
 
-    r1 = [[<tr style="width:100vw; background-color: ]]..headerColour..[[; color: white;">]],
-    r2 = [[<tr>]],
-    re = [[</tr>]],
-
-    thL  = [[<th style="text-align:left; margin-left:20px">]],
-    thL2 = [[<th style="text-align:left; margin-left:20px" colspan="2">]],
-    thR  = [[<th style="text-align:right; margin-right:20px">]],
-
-    th3 = [[<th style="background-color: ]]..headerColour..[[;">&nbsp;</th>]],
-    th4 = [[<th colspan=9>&nbsp;</th>]],
-    the = [[</th>]],
+    th   = [[<th>]],
+    thL  = [[<th style="margin-left:20px">]],
+    thL2 = [[<th style="margin-left:20px" colspan="2">]],
+    thR  = [[<th style="text-align:right">]],
+    th3  = [[<th style="background-color:]]..headerColour..[[;">&nbsp;</th>]],
+    the  = [[</th>]];
 
     nbr = [[<nobr>]],
-    nbre = [[</nobr>]],
+    nbre = [[</nobr>]];
 }
 
-function refreshContainerDisplay(displayLow, displayHigh, force)
+    
+function cell(width, text, align, colour, size)
+    local style = ""
+    if align then style = style.." text-align:"..align..";" end
+    if colour then style = style.." color:"..colour..";" end
+    if size then style = style.." font-size:"..size..";" end
+    if style then style = [[ style="]]..style..[["]] end
+    return [[<th width=]]..width..style..[[><nobr>]]..text..[[</nobr></th>]]
+end
+
+function refreshContainerDisplay(displays, force)
     -- Credit to badman74 for initial approach https://github.com/badman74/DU
     
     local outputData = {}
@@ -258,14 +312,6 @@ function refreshContainerDisplay(displayLow, displayHigh, force)
         local key = container.substance
         if container.overflow then key = "O_"..container.substance end
 
-        -- if container.substance=="Quartz" then
-        --     system.print("Processing Container "..container.name.." ["..container.id.."] key:"..key)
-        --     system.print(" Volume  : "..volume)
-        --     system.print(" Capacity: "..container.capacity)
-        --     system.print(" selfMass  : "..container.selfMass)
-        --     system.print(" contentMass: "..contentMass)
-        --     system.print(" isHub: "..tostring(container.isHub))
-        -- end
         if outputData[key] then
             outputData[key].volume      = outputData[key].volume   + volume
             outputData[key].contentMass = outputData[key].contentMass + contentMass
@@ -279,13 +325,6 @@ function refreshContainerDisplay(displayLow, displayHigh, force)
                 overflow = container.overflow,
             }
         end
-        -- if container.substance=="Quartz" then
-        --     system.print("Totals "..key)
-        --     system.print(" Volume     : "..outputData[key].volume)
-        --     system.print(" Capacity   : "..outputData[key].capacity)
-        --     system.print(" ContentMass: "..outputData[key].contentMass)
-        -- end
-
         -- if outputData[key].volume-container.capacity > .5 then
         --     system.print(container.substance.." : volume > capacity")
         --     system.print(outputData[key].volume.." > "..outputData[key].capacity)
@@ -306,16 +345,8 @@ function refreshContainerDisplay(displayLow, displayHigh, force)
         return goodColour
     end
 
-    function barGraph(percent, reverse, colspan)
-        if not colspan then colspan = 1 end
-        local barcolour = statusColour(percent, reverse)
-        return [[<td class="bar" valign=top colspan="]]..colspan..[[">
-<svg>
-    <rect x="0" y="1" rx="4" ry="4" height="2.5vw" width="17.2vw" stroke="white" stroke-width="1" rx="0" />
-    <rect x="1" y="2" rx="3" ry="3" height="2.4vw" width="]].. (17*percent/100) ..[[vw" fill="]] .. barcolour ..[[" opacity="1.0" rx="0" />
-    <text x="1" y="23" fill="white" text-align="left" margin-left="3" font-family="]]..font..[[">]].. string.format("%02.1f", percent) ..[[%</text>
-</svg>
-</td>]]        
+    function barGraph(width, percent, colour)
+        return [[<td width=]]..width..[[><div class="bar" lab="]]..string.format("%02.1f", percent)..[[%" style="background-color:]]..colour..[[;width:]]..percent..[[%"/></td>]]        
     end
 
     function correctSpelling(text)
@@ -329,10 +360,6 @@ function refreshContainerDisplay(displayLow, displayHigh, force)
         local key = substance
         if overflow then key = "O_"..substance end
         local substanceData = outputData[key]
-        if not substanceData then
-            if overflow then return nil end
-            return "?", 0.0, "kℓ", text
-        end
 
         local short = properties[substance].short     
         if overflow then
@@ -345,6 +372,11 @@ function refreshContainerDisplay(displayLow, displayHigh, force)
             text = short
         end
 
+        if not substanceData then
+            if overflow then return nil end
+            return "?", 0.0, "kℓ", text
+        end
+
         local volume = substanceData.volume
         --system.print(key.." volume="..volume)
         local percent = math.min(100.0 * volume / substanceData.capacity, 100.0) -- densities are not accurate enough
@@ -353,156 +385,166 @@ function refreshContainerDisplay(displayLow, displayHigh, force)
         return string.format("%02.1f", volume/1000), percent, "kℓ", text
     end
 
-    
-    function cell(width, align) return [[<th style="width:]]..width..[[vw; text-align:]]..align..[[;">]]  end
 
-    function newHTMLRow(id1, id2, overflow)
-        local volume1, percent1, units1, text1 = displayFormat(id1, overflow)
+    function addSubstanceDisplay(text1, text2, percent, reverse, volume)
+        local colour = statusColour(percent, reverse)
+        local textColour = false
+        if colour==alarmColour and volume~="?" then textColour=alarmColour end
+        return cell("18%", text1, false, textColour)
+             ..cell("13%", text2, "right")
+             ..barGraph("17%", percent, colour)
+    end
+
+    function newHTMLRow(row)
+        local volume1, percent1, units1, text1 = displayFormat(row.text1, row.overflow)
         if not volume1 then return "" end
         --system.print(text1.." volume="..volume1.." units="..units1.." percent="..percent1)
-        local volume2, percent2, units2, text2 = displayFormat(id2, overflow)
+        local volume2, percent2, units2, text2 = displayFormat(row.text2, row.overflow)
         --system.print(text2.." volume="..volume2.." units="..units2.." percent="..percent2)
-        local converting = "⇒"
-        if overflow or not outputData[id1] or not outputData[id1].ore then converting = "&nbsp;" end
-        resHTML = H.r2 
-            ..H.thL..H.nbr..text1..H.nbre..H.the
-            ..H.thR..volume1..units1..H.the
-            ..barGraph(percent1, overflow)
-            .."<th style=\"background-color: "..headerColour.."\">"..converting..H.the
-            ..H.thL..H.nbr..text2..H.nbre..H.the
-            ..H.thR..volume2..units2..H.the
-            ..barGraph(percent2, overflow)
-            ..H.re
-        return resHTML
+        local converting = "&nbsp;" -- "⇒"
+        --if overflow or not outputData[id1] or not outputData[id1].ore then converting = "&nbsp;" end
+        local colour2 = statusColour(percent2, row.overflow)
+        local textColour2 = false
+        if colour2==alarmColour and volume2~="?" then textColour2=alarmColour end
+        return H.tr
+            ..addSubstanceDisplay(text1, volume1..units1, percent1, row.overflow, volume1)
+            ..H.th..converting..H.the
+            ..addSubstanceDisplay(text2, volume2..units2, percent2, row.overflow, volume2)
+            ..H.tre
     end
-
-    local th1 = [[<th style="width:18vw; text-align:left;">]]
-    local th2 = [[<th style="width:13vw; text-align:left;"></th>
-<th style="width:17vw; text-align:left;"></th>]]
-    
-    function newHTMLHeader(text1, text2)
-        return H.r1..th1..text1..H.the..th2..[[<th style="width:2vw"/>]]..th1..text2..H.the..th2
+   
+    function newHTMLHeader(row)
+        return H.tr2..[[<th width=48% colspan=3>]]..row.text1..[[</th><th/><th width=48% colspan=3>]]..row.text1..[[</th>]]..H.tre
     end
     
-    if displayLow then
-        local html=H.h1..H.d1..H.t2
+    local rows = {}
 
-        html=html..newHTMLHeader("T3 Ores", "T3 Pures")
-        html=html..newHTMLRow("Petalite", "Lithium")
-        html=html..newHTMLRow("Garnierite", "Nickel")
-        html=html..newHTMLRow("Pyrite", "Sulfur")
-        html=html..newHTMLRow("Acanthite", "Silver")
-
-        html=html..newHTMLHeader("T2 Ores", "T2 Pures")
-        html=html..newHTMLRow("Natron", "Sodium")
-        html=html..newHTMLRow("Malachite", "Copper")
-        html=html..newHTMLRow("Limestone", "Calcium")
-        html=html..newHTMLRow("Chromite", "Chromium")
-        
-        html=html..newHTMLHeader("T1 Ores", "T1 Pures")
-        html=html..newHTMLRow("Bauxite", "Aluminium")
-        html=html..newHTMLRow("Coal", "Carbon")
-        html=html..newHTMLRow("Hematite", "Iron")
-        html=html..newHTMLRow("Quartz", "Silicon")
-
-        html=html..newHTMLHeader("H₂", "O₂")
-        html=html..newHTMLRow("Hydrogen", "Oxygen")
-        html=html..newHTMLRow("Hydrogen", "Oxygen", true)
-
-        html=html..H.r1..H.th4..H.re
-        html=html..H.te..H.de
-        displayLow.setHTML(html)
+    function addRow(t1, t2, overflow)
+        rows[#rows+1] = {text1=t1, text2=t2, overflow=overflow}
     end
 
-    if displayHigh then
-        local html=H.h1..H.d1..H.t2
-
-        html=html..newHTMLHeader("T5 Ores", "T5 Pures")
-        html=html..newHTMLRow("Rhodonite", "Manganese")
-        html=html..newHTMLRow("Columbite", "Niobium")
-        html=html..newHTMLRow("Illmenite", "Titanium")
-        html=html..newHTMLRow("Vanadinite", "Vanadium")
-
-        html=html..newHTMLHeader("T4 Ores", "T4 Pures")
-        html=html..newHTMLRow("Cobaltite", "Cobalt")
-        html=html..newHTMLRow("Cryolite", "Fluorine")
-        html=html..newHTMLRow("GoldNuggets", "Gold")
-        html=html..newHTMLRow("Kolbeckite", "Scandium")
-
-        html=html..newHTMLHeader("Plastic", "Plastic")
-        html=html..newHTMLRow("Polycarbonate", "Polycalcite")
-        html=html..newHTMLRow("Polysulfide", "Fluoropolymer")
-
-        html=html..newHTMLHeader("Alloys", "Alloys")
-        html=html..newHTMLRow("Silumin", "Steel")
-        html=html..newHTMLRow("AlFe", "CaRefCu")
-        html=html..newHTMLRow("Stainless steel", "Duralumin")
-
-        html=html..H.r1..H.th4..H.re
-        html=html..H.te..H.de
-        displayHigh.setHTML(html)
+    function addHeaderRow(t1, t2)
+        if not SkipHeadings then rows[#rows+1] = {text1=t1, text2=t2, header=true} end
     end
 
+    addHeaderRow("T5 Ores", "T5 Pures")
+    addRow("Rhodonite", "Manganese")
+    addRow("Columbite", "Niobium")
+    addRow("Illmenite", "Titanium")
+    addRow("Vanadinite", "Vanadium")
+
+    addHeaderRow("T4 Ores", "T4 Pures")
+    addRow("Cobaltite", "Cobalt")
+    addRow("Cryolite", "Fluorine")
+    addRow("GoldNuggets", "Gold")
+    addRow("Kolbeckite", "Scandium")
+
+    addHeaderRow("Plastic", "Plastic")
+    addRow("Polycarbonate", "Polycalcite")
+    addRow("Polysulfide", "Fluoropolymer")
+
+    addHeaderRow("Alloys", "Alloys")
+    addRow("Silumin", "Steel")
+    addRow("AlFe", "CaRefCu")
+    addRow("Stainless steel", "Duralumin")
+  
+    addHeaderRow("T3 Ores", "T3 Pures")
+    addRow("Petalite", "Lithium")
+    addRow("Garnierite", "Nickel")
+    addRow("Pyrite", "Sulfur")
+    addRow("Acanthite", "Silver")
+
+    addHeaderRow("T2 Ores", "T2 Pures")
+    addRow("Natron", "Sodium")
+    addRow("Malachite", "Copper")
+    addRow("Limestone", "Calcium")
+    addRow("Chromite", "Chromium")
+
+    addHeaderRow("T1 Ores", "T1 Pures")
+    addRow("Bauxite", "Aluminium")
+    addRow("Hematite", "Iron")
+    addRow("Coal", "Carbon")
+    addRow("Quartz", "Silicon")
+
+    addHeaderRow("H₂", "O₂")
+    addRow("Hydrogen", "Oxygen")
+    addRow("Hydrogen", "Oxygen", true)
+
+    function addDisplayRows(dId)
+        local html=H.d1..H.tc
+        local startRow = #rows - ContRowsPerScreen * dId + 1
+        local endRow = startRow + ContRowsPerScreen - 1
+        startRow = math.max(startRow , 1)
+        --system.print("row range "..startRow..":"..endRow)
+        for i = startRow, endRow do
+            local row = rows[i]
+            if not row then break end
+            if row.header then 
+                html=html..newHTMLHeader(row)
+            else
+                html=html..newHTMLRow(row)
+            end
+            i = i + 1
+        end
+        html=html..H.te..H.de
+        return html
+    end
+
+    for d, display in pairs(displays) do
+        local html = addDisplayRows(d)
+        for _, mirror in pairs(display) do
+            --system.print("Displaying on: "..core.getElementNameById(mirror.getId()).." @"..d)
+            mirror.setHTML(css..html)
+        end
+    end
 end
 
 dataUpdates = {}
 assemblies = {}
 alerts = {}
 
-function refreshIndustryScreens(displayLow, displayHigh, force)
+function refreshIndustryScreens(displays, force)
     --if not force and databank.hasKey("updated") and databank.getIntValue("updated")==0 then return end
-
-    function newHTMLRow(text1, text2, text3, text4, colour, size)
-        resHTML =
-[[<tr style="color: ]]..colour..[[; font-size: ]]..size..[[em;">>
-]]..H.thL..[[&nbsp;</th>
-]]..H.thL..H.nbr..text1..H.nbre..[[</th>
-]]..H.thL..H.nbr..text2..H.nbre..[[</th>
-]]..H.thR..H.nbr..text3..H.nbre..[[</th>
-]]..H.thL..H.nbr..text4..H.nbre..[[</th>
-</tr>]]
-        return resHTML
-    end
 
     function processData(key, force)
         --system.print("Process Data key="..key)
         local id = tonumber(key)
         if not id then return end
-        debug(id, "Processing #"..id)
+        --debug(id, "Processing #"..id)
         
         local updated = databank.getIntValue(id.."_updated")
         if not force and updated~=1 then
-            debug(id, "Skipping #"..id.." (not changed)")
+            --debug(id, "Skipping #"..id.." (not changed)")
             return 
         end
 
         local infoJson = databank.getStringValue(id)
         if infoJson==nil or infoJson=="" then
-            debug(id, "Skipping #"..id.." (data missing)")
+            --debug(id, "Skipping #"..id.." (data missing)")
             return 
         end
 
         local info = json.decode(infoJson)
         
-        if (not info or type(info)~="table" or not info.status) then 
-            debug(id, "Skipping #"..id.." (data invalid)")
+        if not info or type(info)~="table" or not info.status then 
+            --debug(id, "Skipping #"..id.." (data invalid)")
             return 
         end
 
-        debug(id, id.." status="..info.status)
+        --debug(id, id.." status="..info.status)
         local name = core.getElementNameById(id)
         local machine = core.getElementTypeById(id)
-        if (machine=="assembly line") then
+        if machine=="assembly line" then
             local sizeIndex, size = assemblySize(id)
             local product = ""
             if not string.find(name, "%[") then
                 product = name
             end
-            debug(id, id.." Assembly "..assemblySize(id).." : "..info.status)
+            --debug(id, id.." Assembly "..assemblySize(id).." : "..info.status)
             assemblies[sizeIndex * 10000 + id] = {name=name, size=size, id=id, product=product, status=info.status}
         else
             local alertKey = machine.."_"..name.."_"..id
-            debug(id, id.." : "..machine.."["..name.."] : "..info.status)
+            --debug(id, id.." : "..machine.."["..name.."] : "..info.status)
             if info.status:find("JAMMED") == 1 then       
                 alerts[alertKey] = {name=name, machine=machine, id=id, status=info.status}
             else
@@ -520,38 +562,15 @@ function refreshIndustryScreens(displayLow, displayHigh, force)
     for _,key in ipairs(keys) do
         processData(key, force)
     end
-    processDataUpdates()
 
-    -- Sort the assemblies
-    local tkeys = {}
-    for k in pairs(assemblies) do table.insert(tkeys, k) end
-    table.sort(tkeys)
+    local rows = {}
 
-    if displayLow then
-        local html=H.h1..H.d1..H.t1
+    function addRow(t1, t2, t3, t4, colour, size)
+        rows[#rows+1] = {text1=t1, text2=t2, text3=t3, text4=t4, colour=colour, size=size}
+    end
 
-        html=html..H.r1..H.thL.."&nbsp;"..H.the..H.thL2.."Assm. - Making"..H.the..H.thR.."#&nbsp;"..H.the..H.thL.."Status"..H.the..H.re
-
-        for _, k in ipairs(tkeys) do
-            local assembly = assemblies[k]
-            local colour = alarmColour
-            local status = assembly.status
-            if status == "JAMMED_MISSING_INGREDIENT" then       
-                colour = neutralColour
-                status = "WAITING"
-            elseif status == "RUNNING" then       
-                colour = goodColour
-            elseif status == "STOPPED" then       
-                colour = idleColour
-            elseif status:find("JAMMED") == 1 then       
-                colour = alarmColour
-            end
-            --system.print(assembly.size.." ["..assembly.id.."] :"..status.. " ("..colour..")")
-            html=html..newHTMLRow(assembly.size, assembly.product, assembly.id.."&nbsp;", status, colour, FontSize)
-        end
-
-        html=html..H.te..H.de
-        displayLow.setHTML(html)
+    function addHeaderRow(t1, t2, t3, t4)
+        rows[#rows+1] = {text1=t1, text2=t2, text3=t3, text4=t4, header=true}
     end
 
     -- Sort the alerts
@@ -559,35 +578,115 @@ function refreshIndustryScreens(displayLow, displayHigh, force)
     for k in pairs(alerts) do table.insert(alertkeys, k) end
     table.sort(alertkeys)
 
-    if displayHigh then
-        local html=H.h1..H.d1..H.t1
-
-        html=html..H.r1..H.thL.."&nbsp;"..H.the..H.thL2.."Machine"..H.the..H.thR.."#"..H.the..H.thL.."Alert"..H.the..H.re
-
-        for _, k in ipairs(alertkeys) do
-            local alert = alerts[k]
-            local colour = alarmColour
-            local status = alert.status
-            if status == "JAMMED_MISSING_INGREDIENT" then       
+    addHeaderRow("Machine", "Making", "#", "Alert")
+    for _, k in ipairs(alertkeys) do
+        local alert = alerts[k]
+        local colour = alarmColour
+        local status = alert.status
+        if status == "JAMMED_MISSING_INGREDIENT" then       
+            if WaitingAsAlarm then       
+                colour = alarmColour
+            else
                 colour = neutralColour
+            end
+            status = "WAITING"
+        elseif status == "JAMMED_OUTPUT_FULL" then       
+            colour = alarmColour
+            status = "OUTPUT FULL"
+        elseif status:find("JAMMED") == 1 then       
+            colour = alarmColour
+        end
+        local type = alert.machine
+        if shortTypes[type] then type = shortTypes[type] end
+        addRow(type, alert.name, alert.id, status, colour, alertFontSize)
+    end
+    
+    -- Sort the assemblies
+    local tkeys = {}
+    for k in pairs(assemblies) do table.insert(tkeys, k) end
+    table.sort(tkeys)
+
+    if #tkeys>0 then 
+        addHeaderRow("Assm.", "Making", "#", "Status")
+        for _, k in ipairs(tkeys) do
+            local assembly = assemblies[k]
+            local colour = alarmColour
+            local status = assembly.status
+            if status == "JAMMED_MISSING_INGREDIENT" then
+                if WaitingAsAlarm then       
+                    colour = alarmColour
+                else
+                    colour = neutralColour
+                end
                 status = "WAITING"
+            elseif status == "RUNNING" then       
+                colour = goodColour
+            elseif status == "STOPPED" 
+                or status == "PENDING" then       
+                colour = idleColour
             elseif status:find("JAMMED") == 1 then       
                 colour = alarmColour
             end
-            local type = alert.machine
-            if type=="electronics industry" then type = "elec. ind." end
-            html=html..newHTMLRow(type, alert.name, alert.id.."&nbsp;", status, colour, FontSize)
+            --system.print(assembly.size.." ["..assembly.id.."] :"..status.. " ("..colour..")")
+            addRow(assembly.size, assembly.product, assembly.id, status, colour)
         end
+    end
 
+    function newHTMLRow(row)
+        local style = ""
+        if row.colour then style = style.." color:"..row.colour..";" end
+        if style then style = [[ style="]]..style..[["]] end
+
+        return [[<tr]]..style..[[">
+]]..H.thL..[[&nbsp;</th>
+]]..H.thL..H.nbr..row.text1..H.nbre..[[</th>
+]]..H.thL..H.nbr..row.text2..H.nbre..[[</th>
+]]..H.thR..H.nbr..row.text3..H.nbre..[[&nbsp;</th>
+]]..H.thL..H.nbr..row.text4..H.nbre..[[</th>
+</tr>]]
+    end
+
+    -- function newHTMLHeader(row)
+    --     return H.tr2..H.thL.."&nbsp;"..H.the..H.thL2..row.text1..H.the..H.thR..row.text2.."&nbsp;"..H.the..H.thL..row.text3..H.the..H.tre
+    -- end
+    function newHTMLHeader(row)
+        return H.tr2..[[<th width=2%/><th width=23%>]]..row.text1..[[</th><th>]]..row.text2..[[</th><th width=8% style="text-align:right">]]..row.text3..[[&nbsp;</th><th width=16%>]]..row.text4..H.tre
+    end
+
+    function addDisplayRows(dId)
+        --system.print("display="..dId.." rows="..#rows.." rps="..ProdRowsPerScreen)
+        local html=H.d1..H.tp
+        local startRow = #rows - AssemRowsPerScreen * dId + 1
+        local endRow = startRow + AssemRowsPerScreen - 1
+        startRow = math.max(startRow , 1)
+        --system.print("row range "..startRow..":"..endRow)
+        for i = startRow, endRow do
+            local row = rows[i]
+            if not row then break end
+            if row.header then 
+                html=html..newHTMLHeader(row)
+            else
+                html=html..newHTMLRow(row)
+            end
+            i = i + 1
+        end
         html=html..H.te..H.de
-        displayHigh.setHTML(html)
+        return html
+    end
+
+    for d, display in pairs(displays) do
+        local html = addDisplayRows(d)
+        for _, mirror in pairs(display) do
+            --system.print("Displaying on: "..core.getElementNameById(mirror.getId()).." @"..d)
+            mirror.setHTML(css..html)
+        end
     end
 
 end
 
 function refreshScreens(force)
-    refreshContainerDisplay(containerDisplays[1], containerDisplays[2], force)
-    refreshIndustryScreens(productionDisplays[1], productionDisplays[2], force)
+    refreshContainerDisplay(containerDisplays, force)
+    refreshIndustryScreens(productionDisplays, force)
 end
 
 function processFirst()
@@ -603,7 +702,7 @@ function processDataUpdates()
     for key, info in pairs(dataUpdates) do
         maxToProcess = maxToProcess - 1
         if maxToProcess==0 then return end
-        debug(key, "Resetting update flag for "..key)
+        --debug(key, "Resetting update flag for "..key)
         databank.setIntValue(key.."_updated", 0)
         dataUpdates[key] = nil
     end
@@ -635,7 +734,7 @@ end
 --unit.hide()
 system.print("InDUstry Status")
 local databank = nil
-if debugId > 0 then system.print("Debugging #"..debugId) end
+--if debugId > 0 then system.print("Debugging #"..debugId) end
 onStart()
 
 unit.setTimer("First", 1)
