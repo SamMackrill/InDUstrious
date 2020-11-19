@@ -12,7 +12,7 @@ AlertRowsPerScreen = 24 -- Alert rows per screen
 AlignTop = false --export Align with top of screen
 WaitingAsAlarm = false --export Display waiting state with alarm colour
 KeepBlocksTogether = false  --Don't break blocks across displays
-DataThrottle = 15 --export Maximum writes to process each update, lower this if you get CPU overloads
+DataThrottle = 25 --export Maximum read/writes to process each update, lower this if you get CPU overloads
 SkipHeadings = false --export No substance headings
 US_Spellings = false --export Expect American spellings
 contGap = 1.33 --export Cont Table gap
@@ -507,64 +507,6 @@ alerts = {}
 
 function refreshIndustryScreens(displays, force)
     --if not force and databank.hasKey("updated") and databank.getIntValue("updated")==0 then return end
-
-    function processData(key, force)
-        --system.print("Process Data key="..key)
-        local id = tonumber(key)
-        if not id then return end
-        --debug(id, "Processing #"..id)
-        
-        local updated = databank.getIntValue(id.."_updated")
-        if not force and updated~=1 then
-            --debug(id, "Skipping #"..id.." (not changed)")
-            return 
-        end
-
-        local infoJson = databank.getStringValue(id)
-        if infoJson==nil or infoJson=="" then
-            --debug(id, "Skipping #"..id.." (data missing)")
-            return 
-        end
-
-        local info = json.decode(infoJson)
-        
-        if not info or type(info)~="table" or not info.status then 
-            --debug(id, "Skipping #"..id.." (data invalid)")
-            return 
-        end
-
-        --debug(id, id.." status="..info.status)
-        local name = core.getElementNameById(id)
-        local machine = core.getElementTypeById(id)
-        if machine=="assembly line" then
-            local sizeIndex, size = assemblySize(id)
-            local product = ""
-            if not string.find(name, "%[") then
-                product = name
-            end
-            --debug(id, id.." Assembly "..assemblySize(id).." : "..info.status)
-            assemblies[sizeIndex * 10000 + id] = {name=name, size=size, id=id, product=product, status=info.status}
-        else
-            local alertKey = machine.."_"..name.."_"..id
-            --debug(id, id.." : "..machine.."["..name.."] : "..info.status)
-            if info.status:find("JAMMED") == 1 then       
-                alerts[alertKey] = {name=name, machine=machine, id=id, status=info.status}
-            else
-                alerts[alertKey] = nil
-            end
-        end
-        if updated==1 then
-            dataUpdates[id] = 1
-        end
-    end
-
-    local keyJson = databank.getKeys()
-    if keyJson==nil or keyJson=="" then return end
-    local keys = json.decode(keyJson)
-    for _,key in ipairs(keys) do
-        processData(key, force)
-    end
-
     local rows = {}
 
     function addRow(t1, t2, t3, t4, colour, size)
@@ -697,16 +639,91 @@ function processFirst()
     refreshScreens(true)
 end
 
+local elementsWithKey = {}
+
+function processNewData()
+    if not databank then return end
+
+    function processData(id, force)    
+        local updated = databank.getIntValue(id.."_updated")
+        if not force and updated~=1 then
+            --debug(id, "Skipping #"..id.." (not changed)")
+            return 
+        end
+
+        local infoJson = databank.getStringValue(id)
+        if infoJson==nil or infoJson=="" then
+            --debug(id, "Skipping #"..id.." (data missing)")
+            return 
+        end
+
+        local info = json.decode(infoJson)
+        
+        if not info or type(info)~="table" or not info.status then 
+            --debug(id, "Skipping #"..id.." (data invalid)")
+            return 
+        end
+
+        --debug(id, id.." status="..info.status)
+        local name = core.getElementNameById(id)
+        local machine = core.getElementTypeById(id)
+        if machine=="assembly line" then
+            local sizeIndex, size = assemblySize(id)
+            local product = ""
+            if not string.find(name, "%[") then
+                product = name
+            end
+            --debug(id, id.." Assembly "..assemblySize(id).." : "..info.status)
+            assemblies[sizeIndex * 10000 + id] = {name=name, size=size, id=id, product=product, status=info.status}
+        else
+            local alertKey = machine.."_"..name.."_"..id
+            --debug(id, id.." : "..machine.."["..name.."] : "..info.status)
+            if info.status:find("JAMMED") == 1 then       
+                alerts[alertKey] = {name=name, machine=machine, id=id, status=info.status}
+            else
+                alerts[alertKey] = nil
+            end
+        end
+        if updated==1 then
+            dataUpdates[id] = 1
+        end
+    end
+
+    system.print("Tick ReadData")
+    system.print("#dataKeys="..#dataKeys)
+
+    if #elementsWithKey == 0 then
+        local keyJson = databank.getKeys()
+        if keyJson==nil or keyJson=="" then return end
+        local dataKeys = json.decode(keyJson)
+        for key,datakey in ipairs(elementsWithKey) do
+            system.print("Process form DB ["..key.."]="..datakey)
+            local id = tonumber(datakey)
+            if id then elementsWithKey:insert(id) end
+        end    
+    end
+
+    local maxToProcess = DataThrottle
+    for _,id in ipairs(elementsWithKey) do
+       system.print(id, "Processing #"..id)
+        --debug(id, "Processing #"..id)
+        processData(id, force)
+        elementsWithKey:remove(1)
+        maxToProcess = maxToProcess - 1
+        if maxToProcess==0 then return end
+    end
+end
+
 function processDataUpdates()
     if not databank then return end
     --system.print("Tick WriteData")
     local maxToProcess = DataThrottle
     for key, info in pairs(dataUpdates) do
-        maxToProcess = maxToProcess - 1
-        if maxToProcess==0 then return end
         --debug(key, "Resetting update flag for "..key)
         databank.setIntValue(key.."_updated", 0)
         dataUpdates[key] = nil
+        maxToProcess = maxToProcess - 1
+        if maxToProcess==0 then return end
     end
     -- TODO investigate race condition?
     if next(dataUpdates) == nil then databank.setIntValue("updated", 0) end
@@ -741,4 +758,5 @@ onStart()
 
 unit.setTimer("First", 1)
 unit.setTimer("Live", 7)
+unit.setTimer("ReadData", 5)
 unit.setTimer("WriteData", 3)
