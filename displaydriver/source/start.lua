@@ -92,10 +92,20 @@ properties = {
 
 }
 
+--TODO make this more efficient/case insensitive
 local shortTypes = {
-    ["electronics industry"] = "Elec. ind.",
-    ["chemical industry"] = "Chem. ind.",
-    ["metalworks industry"] = "Met. ind.",
+    ["basic Electronics industry"] = "B.Elec. ind.",
+    ["basic Chemical industry"] = "B.Chem. ind.",
+    ["basic Metalworks industry"] = "B.Met. ind.",
+    ["uncommon Electronics industry"] = "U.Elec. ind.",
+    ["uncommon Chemical industry"] = "U.Chem. ind.",
+    ["uncommon Metalworks industry"] = "U.Met. ind.",
+    ["advanced Electronics industry"] = "A.Elec. ind.",
+    ["advanced Chemical industry"] = "A.Chem. ind.",
+    ["advanced Metalworks industry"] = "A.Met. ind.",
+    ["rare Electronics industry"] = "R.Elec. ind.",
+    ["rare Chemical industry"] = "R.Chem. ind.",
+    ["rare Metalworks industry"] = "R.Met. ind.",
 }
 
 function slotValid(slot)
