@@ -1,4 +1,4 @@
-local version = "V1.2.0"
+local version = "V1.2.2"
 
 PlayerContainerProficiency = 30 --export Your Container Proficiency bonus in total percent (Skills->Mining and Inventory->Inventory Manager)
 PlayerContainerOptimization = 0 --export Your Container Optimization bonus in total percent (Skills->Mining and Inventory->Stock Control)
@@ -699,15 +699,15 @@ function processNewData()
         end
     end
 
-    system.print("Tick ReadData")
-    system.print("#dataKeys="..#dataKeys)
+    --system.print("Tick ReadData")
+    --system.print("#dataKeys="..#dataKeys)
 
     if #elementsWithKey == 0 then
         local keyJson = databank.getKeys()
         if keyJson==nil or keyJson=="" then return end
         local dataKeys = json.decode(keyJson)
         for key,datakey in ipairs(elementsWithKey) do
-            system.print("Process form DB ["..key.."]="..datakey)
+            --system.print("Process form DB ["..key.."]="..datakey)
             local id = tonumber(datakey)
             if id then elementsWithKey:insert(id) end
         end    
@@ -715,7 +715,7 @@ function processNewData()
 
     local maxToProcess = DataThrottle
     for _,id in ipairs(elementsWithKey) do
-       system.print(id, "Processing #"..id)
+       --system.print(id, "Processing #"..id)
         --debug(id, "Processing #"..id)
         processData(id, force)
         elementsWithKey:remove(1)
@@ -766,7 +766,7 @@ local databank = nil
 --if debugId > 0 then system.print("Debugging #"..debugId) end
 onStart()
 
-unit.setTimer("First", 1)
+unit.setTimer("First", 1.5)
 unit.setTimer("Live", 7)
 unit.setTimer("ReadData", 5)
 unit.setTimer("WriteData", 3)
