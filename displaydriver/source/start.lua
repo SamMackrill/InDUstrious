@@ -22,13 +22,6 @@ assemFontSize = 100 / AssemRowsPerScreen - prodGap
 --alertFontSize = 100 / AlertRowsPerScreen - gap
 contFontSize = 100 / ContRowsPerScreen - contGap
 
---debugId = 0 --export Print diagnostics for this ID, 0=OFF
-
--- function debug(id, text)
---     if id~=debugId then return end
---     system.print("MAS#"..self.getId().." "..text)
--- end
-
 -- These densities are not all quite accurate, yet
 properties = {
     Bauxite     = {density = 1.2808, ore = true},
@@ -581,7 +574,7 @@ function refreshIndustryScreens(displays, force)
             elseif status:find("JAMMED") == 1 then       
                 colour = alarmColour
             end
-            --system.print(assembly.size.." ["..assembly.id.."] :"..status.. " ("..colour..")")
+            system.print(assembly.size.." ["..assembly.id.."] :"..status.. " ("..colour..")")
             addRow(assembly.size, assembly.product, assembly.id, status, colour)
         end
     end
@@ -600,9 +593,6 @@ function refreshIndustryScreens(displays, force)
 </tr>]]
     end
 
-    -- function newHTMLHeader(row)
-    --     return H.tr2..H.thL.."&nbsp;"..H.the..H.thL2..row.text1..H.the..H.thR..row.text2.."&nbsp;"..H.the..H.thL..row.text3..H.the..H.tre
-    -- end
     function newHTMLHeader(row)
         return H.tr2..[[<th width=2%/><th width=23%>]]..row.text1..[[</th><th>]]..row.text2..[[</th><th width=8% style="text-align:right">]]..row.text3..[[&nbsp;</th><th width=16%>]]..row.text4..H.tre
     end
@@ -683,11 +673,11 @@ function processNewData()
             if not string.find(name, "%[") then
                 product = name
             end
-            --debug(id, id.." Assembly "..assemblySize(id).." : "..info.status)
+            system.print(id.." Assembly "..assemblySize(id).." : "..info.status)
             assemblies[sizeIndex * 10000 + id] = {name=name, size=size, id=id, product=product, status=info.status}
         else
             local alertKey = machine.."_"..name.."_"..id
-            --debug(id, id.." : "..machine.."["..name.."] : "..info.status)
+            system.print(id.." : "..machine.."["..name.."] : "..info.status)
             if info.status:find("JAMMED") == 1 then       
                 alerts[alertKey] = {name=name, machine=machine, id=id, status=info.status}
             else
@@ -699,15 +689,14 @@ function processNewData()
         end
     end
 
-    --system.print("Tick ReadData")
-    --system.print("#dataKeys="..#dataKeys)
+    system.print("#elementsWithKey="..#elementsWithKey)
 
     if #elementsWithKey == 0 then
         local keyJson = databank.getKeys()
         if keyJson==nil or keyJson=="" then return end
         local dataKeys = json.decode(keyJson)
         for key,datakey in ipairs(elementsWithKey) do
-            --system.print("Process form DB ["..key.."]="..datakey)
+            system.print("Process form DB ["..key.."]="..datakey)
             local id = tonumber(datakey)
             if id then elementsWithKey:insert(id) end
         end    
@@ -715,8 +704,7 @@ function processNewData()
 
     local maxToProcess = DataThrottle
     for _,id in ipairs(elementsWithKey) do
-       --system.print(id, "Processing #"..id)
-        --debug(id, "Processing #"..id)
+       system.print(id, "Processing #"..id)
         processData(id, force)
         elementsWithKey:remove(1)
         maxToProcess = maxToProcess - 1
