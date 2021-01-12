@@ -7,20 +7,24 @@ HighLevel = 50 --export Percent for high level indicator
 ContainerMatch = "C_(.+)" --export Match for single item Storage Container names (e.g. "C_Hematite")
 OverflowMatch = "O_(.+)" --export Match for single item Overflow Container names (e.g. "O_Hydrogen")
 ContRowsPerScreen = 20 --export Container rows per screen
-AssemRowsPerScreen = 16 --export Assembly rows per screen
+AssemRowsPerScreen = 24 --export Assembly rows per screen
 AlertRowsPerScreen = 24 -- Alert rows per screen
 AlignTop = false --export Align with top of screen
 WaitingAsAlarm = false --export Display waiting state with alarm colour
 KeepBlocksTogether = false  --Don't break blocks across displays
 DataThrottle = 50 --export Maximum read/writes to process each update, lower this if you get CPU overloads
+FirstDelay = .3 --export Delay before First calculations
+RefreshDelay = 5 --export Screen Refresh Rate
+MonitorDelay = 3 --export Delay before Read operations are processed
 SkipHeadings = false --export No substance headings
 US_Spellings = false --export Expect American spellings
+
 contGap = 1.33 --export Cont Table gap
 prodGap = 0.4 --export Cont Table gap
 
-assemFontSize = 100 / AssemRowsPerScreen - prodGap
+assemFontSize = 100.0 / AssemRowsPerScreen - prodGap
 --alertFontSize = 100 / AlertRowsPerScreen - gap
-contFontSize = 100 / ContRowsPerScreen - contGap
+contFontSize = 100.0 / ContRowsPerScreen - contGap
 
 -- These densities are not all quite accurate, yet
 properties = {
@@ -234,10 +238,11 @@ function onStart()
         local name = core.getElementNameById(id)
         --system.print("Adding "..industry..": "..name.. " ["..id.."]")
 
-        local shortType = shortTypes[machine] or machine
+        local lowMachine = string.lower(machine)
+        local shortType = shortTypes[lowMachine] or machine
         --system.print(id.." : "..machine.."["..name.."]")
         local industry = {name=name, industry=machine, shortType=shortType, id=id, tier=tier}
-        if string.lower(machine)=="assembly line" then
+        if lowMachine=="assembly line" then
             industry.assembly = true
             local sizeIndex, size = assemblySize(id)
             industry.sortKey = sizeIndex * 10000 + id
@@ -740,12 +745,84 @@ function onStop()
     end    
 end
 
+function HideHighlight()
+    highlight.on = false
+    if #highlight.stickers == 0 then return end
+    system.print("Highlighting off")
+    for i in pairs(highlight.stickers) do
+        core.deleteSticker(highlight.stickers[i])
+    end
+    highlight.stickers = {}
+end
+
+function ShowHighlight()
+    highlight.on = true
+    table.insert(highlight.stickers, core.spawnArrowSticker(highlight.x + highlight.xoffset, highlight.y, highlight.z, "north"))
+    table.insert(highlight.stickers, core.spawnArrowSticker(highlight.x, highlight.y - highlight.yoffset, highlight.z, "east"))
+    table.insert(highlight.stickers, core.spawnArrowSticker(highlight.x - highlight.xoffset, highlight.y, highlight.z, "south"))
+    table.insert(highlight.stickers, core.spawnArrowSticker(highlight.x, highlight.y + highlight.yoffset, highlight.z, "west"))
+    table.insert(highlight.stickers, core.spawnArrowSticker(highlight.x, highlight.y, highlight.z - highlight.zoffset, "up"))
+    table.insert(highlight.stickers, core.spawnArrowSticker(highlight.x, highlight.y, highlight.z + highlight.zoffset, "down"))
+end
+
+-- Credit to DorianTheGrey for approach
+function HighlightElement(id)
+    system.print("Highlighting id="..id)
+    if highlight.on then HideHighlight() end
+    highlight.id = id
+    local pos = vec3(core.getElementPositionById(id))
+    highlight.x = pos.x - coreWorldOffset
+    highlight.y = pos.y - coreWorldOffset
+    highlight.z = pos.z - coreWorldOffset
+    --local rot = core.getElementRotationById(id)
+    --system.print("Rot="..json.encode(rot))
+    local size = 3.1 * (math.log(core.getElementMassById(id), 10) - 1.0)
+    system.print("Size="..size)
+    highlight.xoffset = size
+    highlight.yoffset = size
+    highlight.zoffset = size
+    ShowHighlight()
+end
+
+function screenClicked(x, y, id, screen, rows)
+    system.print("Clicked on #"..id.." : "..core.getElementNameById(id).." @("..x..", "..y..")")
+
+    system.print("Display has "..#rows)
+    local rowIndex = math.floor(#rows - AssemRowsPerScreen * (1- y) + 1)
+    system.print("rowIndex "..rowIndex)
+    local row = rows[rowIndex]
+    system.print("row id "..tostring(row.id))
+    if not row.id then return end
+
+    if row.id == highlight.id then   
+        HideHighlight()
+    else
+        HighlightElement(row.id)
+    end 
+    refreshIndustryScreens(productionDisplays, false)
+end
+
+function onClick(x, y)
+    system.print("Click: ("..x..", "..y..")")
+    for d, displaySet in pairs(productionDisplays) do
+        for id, screen in pairs(displaySet.screens) do
+            --system.print("Checking #"..id.." : "..core.getElementNameById(id))
+            --system.print("  X: "..tostring(screen.getMouseX()))
+            --system.print("  Y: "..tostring(screen.getMouseY()))
+            if screen.getMouseX() ~= -1 and screen.getMouseY() ~= -1 then
+                screenClicked(x, y, id, screen, displaySet.rows)
+                return
+            end
+        end
+    end
+end
+
 --unit.hide()
 system.print("InDUstry Status "..version)
 local databank = nil
 
 onStart()
 
-unit.setTimer("First", 0.5)
-unit.setTimer("Live", 5)
-unit.setTimer("MonitorChanges", 3)
+unit.setTimer("First", FirstDelay)
+unit.setTimer("Live", RefreshDelay)
+unit.setTimer("MonitorChanges", MonitorDelay)
