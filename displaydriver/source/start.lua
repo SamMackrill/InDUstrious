@@ -191,7 +191,7 @@ function onStart()
     end
 
     function addContainer(id, type)
-        if type~="container" then return false end
+        if string.lower(type)~="container" then return false end
         local name = core.getElementNameById(id)
         if not name then return true end
 
@@ -237,7 +237,7 @@ function onStart()
         local shortType = shortTypes[machine] or machine
         --system.print(id.." : "..machine.."["..name.."]")
         local industry = {name=name, industry=machine, shortType=shortType, id=id, tier=tier}
-        if machine=="assembly line" then
+        if string.lower(machine)=="assembly line" then
             industry.assembly = true
             local sizeIndex, size = assemblySize(id)
             industry.sortKey = sizeIndex * 10000 + id
@@ -252,7 +252,7 @@ function onStart()
     
     local elementsIds = core.getElementIdList()
     for _,id in ipairs(elementsIds) do
-        local type = string.lower(core.getElementTypeById(id))
+        local type = core.getElementTypeById(id)
         --system.print("Element: "..core.getElementNameById(id).." : "..type.. " ["..id.."]")
         if not addContainer(id, type) then
             addIndustry(id, type)
