@@ -1,4 +1,4 @@
-local version = "V1.2.2"
+local version = "V2.0.0"
 
 PlayerContainerProficiency = 30 --export Your Container Proficiency bonus in total percent (Skills->Mining and Inventory->Inventory Manager)
 PlayerContainerOptimization = 0 --export Your Container Optimization bonus in total percent (Skills->Mining and Inventory->Stock Control)
@@ -12,7 +12,7 @@ AlertRowsPerScreen = 24 -- Alert rows per screen
 AlignTop = false --export Align with top of screen
 WaitingAsAlarm = false --export Display waiting state with alarm colour
 KeepBlocksTogether = false  --Don't break blocks across displays
-DataThrottle = 25 --export Maximum read/writes to process each update, lower this if you get CPU overloads
+DataThrottle = 50 --export Maximum read/writes to process each update, lower this if you get CPU overloads
 SkipHeadings = false --export No substance headings
 US_Spellings = false --export Expect American spellings
 contGap = 1.33 --export Cont Table gap
@@ -87,18 +87,16 @@ properties = {
 
 --TODO make this more efficient/case insensitive
 local shortTypes = {
-    ["basic Electronics industry"] = "B.Elec. ind.",
-    ["basic Chemical industry"] = "B.Chem. ind.",
-    ["basic Metalworks industry"] = "B.Met. ind.",
-    ["uncommon Electronics industry"] = "U.Elec. ind.",
-    ["uncommon Chemical industry"] = "U.Chem. ind.",
-    ["uncommon Metalworks industry"] = "U.Met. ind.",
-    ["advanced Electronics industry"] = "A.Elec. ind.",
-    ["advanced Chemical industry"] = "A.Chem. ind.",
-    ["advanced Metalworks industry"] = "A.Met. ind.",
-    ["rare Electronics industry"] = "R.Elec. ind.",
-    ["rare Chemical industry"] = "R.Chem. ind.",
-    ["rare Metalworks industry"] = "R.Met. ind.",
+    ["electronics industry"] = "Elec. ind.",
+    ["chemical industry"] = "Chem. ind.",
+    ["metalworks industry"] = "Met. ind.",
+}
+
+local tiers = {
+    basic = 1,
+    uncommon = 2,
+    advanced = 3,
+    rare= 4,
 }
 
 function slotValid(slot)
@@ -111,6 +109,12 @@ end
 local containerDisplays = {}
 local productionDisplays = {}
 local containers = {}
+local industries = {}
+local assemblies = {}
+local alerts = {}
+local schematicMainProduct = {[0]="Nothing"}
+local monitorIndex = 1
+
 function onStart()
 
     function setMessage(screen, text)
@@ -125,8 +129,6 @@ function onStart()
                 setMessage(slot, "If you see this you need to rename the screens...")
             elseif not databank and slot.getStringValue then
                 databank = slot
-                databank.setIntValue("master", 1)
-                --if debugId>0 then databank.setIntValue("debugId", debugId) end
             elseif not core and slot.getConstructId then
                 core = slot
             end
@@ -151,14 +153,14 @@ function onStart()
                             else
                                 containerDisplays[index] = {slot}
                             end
-                            setMessage(slot, "If you see this you may need to restart the master board")
+                            setMessage(slot, "Anaylsing Core for Containers...\nIf this text persists you may need to restart the master board")
                         elseif type=="Prod" then
                             if productionDisplays[index] then
                                 table.insert(productionDisplays[index], slot)
                             else
                                 productionDisplays[index] = {slot}
                             end
-                            setMessage(slot, "If you see this you may need to restart the master board")
+                            setMessage(slot, "Anaylsing Core for Industry...\nIf this text persists you may need to restart the master board")
                         end
                     end
                 end
@@ -188,10 +190,10 @@ function onStart()
         end
     end
 
-    function addContainer(id)
-        if not core.getElementTypeById(id)=="container" then return end
+    function addContainer(id, type)
+        if type~="container" then return false end
         local name = core.getElementNameById(id)
-        if not name then return end
+        if not name then return true end
 
         local overflow = false
         local substance = string.match(name, "^"..ContainerMatch)
@@ -205,7 +207,7 @@ function onStart()
         end
 
         local property = properties[substance]
-        if not property then return end
+        if not property then return true end
 
         local selfMass, baseVolume = getBaseCointainerProperties(id)
         capacity = baseVolume*(1.0 + PlayerContainerProficiency/100)
@@ -221,11 +223,40 @@ function onStart()
             overflow=overflow,
             isHub=baseVolume==0,
         }
+        return true
+    end
+
+    function addIndustry(id, type)
+        local tier, machine = string.match(type, "(%S+)%s(.+)")
+        if not tier or not machine then return false end
+        --system.print("tier: >"..tier.."< : >"..industry.."<")
+        if not tiers[tier] then return false end
+        local name = core.getElementNameById(id)
+        --system.print("Adding "..industry..": "..name.. " ["..id.."]")
+
+        local shortType = shortTypes[machine] or machine
+        --system.print(id.." : "..machine.."["..name.."]")
+        local industry = {name=name, industry=machine, shortType=shortType, id=id, tier=tier}
+        if machine=="assembly line" then
+            industry.assembly = true
+            local sizeIndex, size = assemblySize(id)
+            industry.sortKey = sizeIndex * 10000 + id
+            industry.size = size
+            --system.print(id.." Assembly "..industry.name.." "..size)
+        else
+            industry.sortKey = machine.."_"..name.."_"..id
+        end
+        table.insert(industries, industry)
+        return true
     end
     
     local elementsIds = core.getElementIdList()
     for _,id in ipairs(elementsIds) do
-        addContainer(id)
+        local type = string.lower(core.getElementTypeById(id))
+        --system.print("Element: "..core.getElementNameById(id).." : "..type.. " ["..id.."]")
+        if not addContainer(id, type) then
+            addIndustry(id, type)
+        end
     end
 end
 
@@ -305,7 +336,7 @@ function cell(width, text, align, colour, size)
     return [[<th width=]]..width..style..[[><nobr>]]..text..[[</nobr></th>]]
 end
 
-function refreshContainerDisplay(displays, force)
+function refreshContainerDisplay(displays)
     -- Credit to badman74 for initial approach https://github.com/badman74/DU
     
     local outputData = {}
@@ -504,12 +535,7 @@ function refreshContainerDisplay(displays, force)
     end
 end
 
-dataUpdates = {}
-assemblies = {}
-alerts = {}
-
-function refreshIndustryScreens(displays, force)
-    --if not force and databank.hasKey("updated") and databank.getIntValue("updated")==0 then return end
+function refreshIndustryScreens(displays)
     local rows = {}
 
     function addRow(t1, t2, t3, t4, colour, size)
@@ -529,53 +555,53 @@ function refreshIndustryScreens(displays, force)
     for _, k in ipairs(alertkeys) do
         local alert = alerts[k]
         local colour = alarmColour
-        local status = alert.status
-        if status == "JAMMED_MISSING_INGREDIENT" then       
+        local state = alert.status.state
+        if state == "JAMMED_MISSING_INGREDIENT" then       
             if WaitingAsAlarm then       
                 colour = alarmColour
             else
                 colour = neutralColour
             end
-            status = "WAITING"
-        elseif status == "JAMMED_OUTPUT_FULL" then       
+            state = "WAITING"
+        elseif state == "JAMMED_OUTPUT_FULL" then       
             colour = alarmColour
-            status = "OUTPUT FULL"
-        elseif status:find("JAMMED") == 1 then       
+            state = "OUTPUT FULL"
+        elseif state:find("JAMMED") == 1 then       
             colour = alarmColour
         end
-        local type = alert.machine
-        if shortTypes[type] then type = shortTypes[type] end
-        addRow(type, alert.name, alert.id, status, colour, alertFontSize)
+        local product = schematicMainProduct[alert.status.schematicId]
+        addRow(alert.shortType, product, alert.id, state, colour, alertFontSize)
     end
     
     -- Sort the assemblies
-    local tkeys = {}
-    for k in pairs(assemblies) do table.insert(tkeys, k) end
-    table.sort(tkeys)
+    local assemkeys = {}
+    for k in pairs(assemblies) do table.insert(assemkeys, k) end
+    table.sort(assemkeys)
 
-    if #tkeys>0 then 
+    if #assemkeys>0 then 
         addHeaderRow("Assm.", "Making", "#", "Status")
-        for _, k in ipairs(tkeys) do
+        for _, k in pairs(assemkeys) do
             local assembly = assemblies[k]
             local colour = alarmColour
-            local status = assembly.status
-            if status == "JAMMED_MISSING_INGREDIENT" then
+            local state = assembly.status.state
+            if state == "JAMMED_MISSING_INGREDIENT" then
                 if WaitingAsAlarm then       
                     colour = alarmColour
                 else
                     colour = neutralColour
                 end
-                status = "WAITING"
-            elseif status == "RUNNING" then       
+                state = "WAITING"
+            elseif state == "RUNNING" then       
                 colour = goodColour
-            elseif status == "STOPPED" 
-                or status == "PENDING" then       
+            elseif state == "STOPPED" 
+                or state == "PENDING" then       
                 colour = idleColour
-            elseif status:find("JAMMED") == 1 then       
+            elseif state:find("JAMMED") == 1 then       
                 colour = alarmColour
             end
-            system.print(assembly.size.." ["..assembly.id.."] :"..status.. " ("..colour..")")
-            addRow(assembly.size, assembly.product, assembly.id, status, colour)
+            --system.print(assembly.size.." ["..assembly.id.."] :"..state.." schem="..assembly.status.schematicId.." ("..colour..")")
+            local product = schematicMainProduct[assembly.status.schematicId]
+            addRow(assembly.size, product, assembly.id, state, colour)
         end
     end
 
@@ -628,116 +654,82 @@ function refreshIndustryScreens(displays, force)
 
 end
 
-function refreshScreens(force)
-    refreshContainerDisplay(containerDisplays, force)
-    refreshIndustryScreens(productionDisplays, force)
+function refreshScreens()
+    refreshContainerDisplay(containerDisplays)
+    refreshIndustryScreens(productionDisplays)
 end
 
 function processFirst()
     --system.print("Tick First")
     unit.stopTimer("First")
-    refreshScreens(true)
+    refreshScreens()
 end
 
-local elementsWithKey = {}
 
-function processNewData()
-    if not databank then return end
+function processChanges()
 
-    function processData(id, force)    
-        local updated = databank.getIntValue(id.."_updated")
-        if not force and updated~=1 then
-            --debug(id, "Skipping #"..id.." (not changed)")
+    --system.print("Tick Statuses")
+
+    function lookupSchematic(schematicId)
+        if schematicMainProduct[schematicId] then return end
+        local schematicJson = core.getSchematicInfo(schematicId)
+        local schematic = json.decode(schematicJson)
+        if not schematic.products then
+            --system.print("Schematic #"..schematicId)
+            --system.print(schematicJson)
+            schematicMainProduct[schematicId] = "Unknown#"..schematicId
+            return;
+        end
+        schematicMainProduct[schematicId] = schematic.products[1].name
+    end
+
+    function processStatus(industry)    
+
+        local statusJson = core.getElementIndustryStatus(industry.id)
+        local status = json.decode(statusJson)
+        industry.status = status
+
+        if industry.assembly then
+            lookupSchematic(status.schematicId)
+            --system.print("Assembly: "..industry.name.." ["..industry.id.."] making:"..schematicMainProduct[status.schematicId])
+            assemblies[industry.sortKey] = industry
             return 
         end
 
-        local infoJson = databank.getStringValue(id)
-        if infoJson==nil or infoJson=="" then
-            --debug(id, "Skipping #"..id.." (data missing)")
-            return 
-        end
-
-        local info = json.decode(infoJson)
-        
-        if not info or type(info)~="table" or not info.status then 
-            --debug(id, "Skipping #"..id.." (data invalid)")
-            return 
-        end
-
-        --debug(id, id.." status="..info.status)
-        local name = core.getElementNameById(id)
-        local machine = core.getElementTypeById(id)
-        if machine=="assembly line" then
-            local sizeIndex, size = assemblySize(id)
-            local product = ""
-            if not string.find(name, "%[") then
-                product = name
-            end
-            system.print(id.." Assembly "..assemblySize(id).." : "..info.status)
-            assemblies[sizeIndex * 10000 + id] = {name=name, size=size, id=id, product=product, status=info.status}
+        if status.state:find("JAMMED") == 1 then       
+            lookupSchematic(status.schematicId)
+            --system.print("Alert: "..industry.name.." ["..industry.id.."] making:"..schematicMainProduct[status.schematicId])
+            alerts[industry.sortKey] = industry
         else
-            local alertKey = machine.."_"..name.."_"..id
-            system.print(id.." : "..machine.."["..name.."] : "..info.status)
-            if info.status:find("JAMMED") == 1 then       
-                alerts[alertKey] = {name=name, machine=machine, id=id, status=info.status}
-            else
-                alerts[alertKey] = nil
-            end
-        end
-        if updated==1 then
-            dataUpdates[id] = 1
+            alerts[industry.sortKey] = nil
         end
     end
 
-    system.print("#elementsWithKey="..#elementsWithKey)
-
-    if #elementsWithKey == 0 then
-        local keyJson = databank.getKeys()
-        if keyJson==nil or keyJson=="" then return end
-        local dataKeys = json.decode(keyJson)
-        for key,datakey in ipairs(elementsWithKey) do
-            system.print("Process form DB ["..key.."]="..datakey)
-            local id = tonumber(datakey)
-            if id then elementsWithKey:insert(id) end
-        end    
+    local maxToProcess = math.min(DataThrottle, #industries)
+    --system.print("#industries="..#industries.." max="..maxToProcess.." DataThrottle="..DataThrottle)
+    
+    local index = monitorIndex
+    for i = 1, maxToProcess do
+        processStatus(industries[index])
+        index = index + 1
+        if index > #industries then index = 1 end
     end
-
-    local maxToProcess = DataThrottle
-    for _,id in ipairs(elementsWithKey) do
-       system.print(id, "Processing #"..id)
-        processData(id, force)
-        elementsWithKey:remove(1)
-        maxToProcess = maxToProcess - 1
-        if maxToProcess==0 then return end
-    end
+    --system.print("Checked: "..monitorIndex..":"..index-1)
+    monitorIndex = index
 end
 
-function processDataUpdates()
-    if not databank then return end
-    --system.print("Tick WriteData")
-    local maxToProcess = DataThrottle
-    for key, info in pairs(dataUpdates) do
-        --debug(key, "Resetting update flag for "..key)
-        databank.setIntValue(key.."_updated", 0)
-        dataUpdates[key] = nil
-        maxToProcess = maxToProcess - 1
-        if maxToProcess==0 then return end
-    end
-    -- TODO investigate race condition?
-    if next(dataUpdates) == nil then databank.setIntValue("updated", 0) end
-end
 
 function processTick()   
     --system.print("Tick Live")
-    local ok, msg = xpcall(function ()
+    --local ok, msg = xpcall(function ()
 
-        refreshScreens(false)
+        refreshScreens()
 
-    end, traceback)
+    --end, traceback)
 
-    if not ok then
-      system.print(msg)
-    end
+    --if not ok then
+      --system.print(msg)
+    --end
 end
 
 function onStop()
@@ -751,10 +743,9 @@ end
 --unit.hide()
 system.print("InDUstry Status "..version)
 local databank = nil
---if debugId > 0 then system.print("Debugging #"..debugId) end
+
 onStart()
 
-unit.setTimer("First", 1.5)
-unit.setTimer("Live", 7)
-unit.setTimer("ReadData", 5)
-unit.setTimer("WriteData", 3)
+unit.setTimer("First", 0.5)
+unit.setTimer("Live", 5)
+unit.setTimer("MonitorChanges", 3)
