@@ -35,7 +35,7 @@ Wiki has FAQ: https://github.com/SamMackrill/InDUstrious/wiki
   * ContDisplay1, ContDisplay2, ContDisplay3 etc
   * ProdDisplay1, ProdDisplay2, ProdDisplay3 etc
   * You can have as many screeens as you have spare slots on the master board
-  * To mirror a display connect a screen with the same name e.g. add onother screen called ContDisplay1
+  * To mirror a display connect a screen with the same name e.g. add another screen called ContDisplay1
 
 ### Installation
 * Add a programming board
