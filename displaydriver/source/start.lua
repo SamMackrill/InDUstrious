@@ -6,6 +6,7 @@ LowLevel = 25 --export Percent for low level indicator
 HighLevel = 50 --export Percent for high level indicator
 ContainerMatch = "C_(.+)" --export Match for single item Storage Container names (e.g. "C_Hematite")
 OverflowMatch = "O_(.+)" --export Match for single item Overflow Container names (e.g. "O_Hydrogen")
+DisplayBlocks = "pl al t3 t2 t1 ga" --export Container types to display from top to bottom (t1-t5, pl, al, ga)
 ContRowsPerScreen = 20 --export Container rows per screen
 ProdRowsPerScreen = 24 --export Production rows per screen
 AlignTop = false --export Align with top of screen
@@ -91,7 +92,78 @@ properties = {
 
 }
 
---TODO make this more efficient/case insensitive
+
+local blocks = {
+    t5 = {    
+       Headers = {"T5 Ores", "T5 Pures"},
+       Rows = {
+            {"Rhodonite", "Manganese"},
+            {"Columbite", "Niobium"},
+            {"Illmenite", "Titanium"},
+            {"Vanadinite", "Vanadium"},
+        },
+    },
+    t4 = {    
+        Headers = {"T4 Ores", "T4 Pures"},
+        Rows = {
+            {"Cobaltite", "Cobalt"},
+            {"Cryolite", "Fluorine"},
+            {"GoldNuggets", "Gold"},
+            {"Kolbeckite", "Scandium"},
+        },
+    },
+    pl = {    
+        Headers = {"Plastic", "Plastic"},
+        Rows = {
+            {"Polycarbonate", "Polycalcite"},
+            {"Polysulfide", "Fluoropolymer"},
+        },
+    },
+    al = {    
+        Headers = {"Alloys", "Alloys"},
+        Rows = {
+            {"Silumin", "Duralumin"},
+            {"AlFe", "CaRefCu"},
+            {"Steel", "Stainless steel"},
+            {"AlLi", "Inconel"},
+        },
+    },
+    t3 = {    
+        Headers = {"T3 Ores", "T3 Pures"},
+        Rows = {
+            {"Petalite", "Lithium"},
+            {"Garnierite", "Nickel"},
+            {"Pyrite", "Sulfur"},
+            {"Acanthite", "Silver"},
+        },
+    },
+    t2 = {    
+        Headers = {"T2 Ores", "T2 Pures"},
+        Rows = {
+            {"Natron", "Sodium"},
+            {"Malachite", "Copper"},
+            {"Limestone", "Calcium"},
+            {"Chromite", "Chromium"},
+        },
+    },
+    t1 = {    
+        Headers = {"T1 Ores", "T1 Pures"},
+        Rows = {
+            {"Bauxite", "Aluminium"},
+            {"Hematite", "Iron"},
+            {"Coal", "Carbon"},
+            {"Quartz", "Silicon"},
+        },
+    },
+    ga = {
+        Headers = {"H₂", "O₂"},
+        Rows = {
+            {"Hydrogen", "Oxygen"},
+            {"Hydrogen", "Oxygen", true},
+        },
+    },
+}
+
 local shortTypes = {
     ["electronics industry"] = "Elec. ind.",
     ["chemical industry"] = "Chem. ind.",
@@ -118,7 +190,7 @@ local containers = {}
 local industries = {}
 local assemblies = {}
 local alerts = {}
-local schematicMainProduct = {[0]="Nothing"}
+local schematicMainProduct = {[0]="No Schematic Set"}
 local monitorIndex = 1
 local highlight = {on=false, id=0, stickers={}}
 local coreWorldOffset = 0
@@ -475,49 +547,17 @@ function refreshContainerDisplay(displays)
         if not SkipHeadings then rows[#rows+1] = {text1=t1, text2=t2, header=true} end
     end
 
-    addHeaderRow("T5 Ores", "T5 Pures")
-    addRow("Rhodonite", "Manganese")
-    addRow("Columbite", "Niobium")
-    addRow("Illmenite", "Titanium")
-    addRow("Vanadinite", "Vanadium")
+    for key in DisplayBlocks:gmatch("%S+") do
+        local block = blocks[key]
+        addHeaderRow(block.Headers[1], block.Headers[2])
+        for _, row in ipairs(block.Rows) do
+            addRow(row[1], row[2], row[3])
+        end
+    end
 
-    addHeaderRow("T4 Ores", "T4 Pures")
-    addRow("Cobaltite", "Cobalt")
-    addRow("Cryolite", "Fluorine")
-    addRow("GoldNuggets", "Gold")
-    addRow("Kolbeckite", "Scandium")
-
-    addHeaderRow("Plastic", "Plastic")
-    addRow("Polycarbonate", "Polycalcite")
-    addRow("Polysulfide", "Fluoropolymer")
-
-    addHeaderRow("Alloys", "Alloys")
-    addRow("Silumin", "Duralumin")
-    addRow("AlFe", "CaRefCu")
-    addRow("Steel", "Stainless steel")
-    addRow("AlLi", "Inconel")
-  
-    addHeaderRow("T3 Ores", "T3 Pures")
-    addRow("Petalite", "Lithium")
-    addRow("Garnierite", "Nickel")
-    addRow("Pyrite", "Sulfur")
-    addRow("Acanthite", "Silver")
-
-    addHeaderRow("T2 Ores", "T2 Pures")
-    addRow("Natron", "Sodium")
-    addRow("Malachite", "Copper")
-    addRow("Limestone", "Calcium")
-    addRow("Chromite", "Chromium")
-
-    addHeaderRow("T1 Ores", "T1 Pures")
-    addRow("Bauxite", "Aluminium")
-    addRow("Hematite", "Iron")
-    addRow("Coal", "Carbon")
-    addRow("Quartz", "Silicon")
-
-    addHeaderRow("H₂", "O₂")
-    addRow("Hydrogen", "Oxygen")
-    addRow("Hydrogen", "Oxygen", true)
+    --addHeaderRow("H₂", "O₂")
+    --addRow("Hydrogen", "Oxygen")
+    --addRow("Hydrogen", "Oxygen", true)
 
     function addDisplayRows(dId)
         local displayRows = {}
