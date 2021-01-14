@@ -772,7 +772,7 @@ end
 function HideHighlight()
     highlight.on = false
     if #highlight.stickers == 0 then return end
-    system.print("Highlighting off")
+    --system.print("Highlighting off")
     for i in pairs(highlight.stickers) do
         core.deleteSticker(highlight.stickers[i])
     end
