@@ -47,7 +47,7 @@ Wiki has FAQ: https://github.com/SamMackrill/InDUstrious/wiki
 
 ### Upgrading from V1.x.x
 * Remove all monitor programming boards, databanks and repeaters
-   * All data is now obdained directly from the core
+   * All data is now obtained directly from the core
 
 ### Installation - Optional
 * Tweak the behaviour by right clicking the master programming board -> Advanced -> Edit Lua Parameters
