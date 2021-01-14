@@ -17,7 +17,7 @@ Screen based factory monitor, simulating a real control room
 ### Notes
 * Industry units running normally are not shown
 * Restart the master board if you rename anything
-* Sometimes displays show as blank grey screens, restart the game to fix this
+* Sometimes displays show as blank grey screens, restart the game to fix this (known NQ bug)
 * Config links are to latest versions, for earlier versions see the releases
   * To install in game on a programming board: Right-click -> Advanced -> Paste Lua configuration from clipboard
 
@@ -31,48 +31,24 @@ Wiki has FAQ: https://github.com/SamMackrill/InDUstrious/wiki
   * If you have multiple containers and hubs with the same content then name them all the same
 * Name the overflow containers (including hubs) as O_XXXX where XXXX is the name of what is being stored e.g. O_Hydrogen
 * Some substance names cannot be matched exactly as NQ forbid certain characters in custom names (see below for list)
-* Add 4 large/medium screens, 2 x 2 layout of large screens seems best
+* Add large/medium screens, 2 x 2 layout of large screens seems best
 * Rename the screens (not the slots) exactly:
   * ContDisplay1, ContDisplay2, ContDisplay3 etc
   * ProdDisplay1, ProdDisplay2, ProdDisplay3 etc
   * You can have as many screeens as you have spare slots on the master board
-  * To mirror a display connect a screen with the same name e.g. add onothe screen called ContDisplay1
+  * To mirror a display connect a screen with the same name e.g. add another screen called ContDisplay1
 
-### Installation - Simple
-#### How it works
-<img src="images/industrious_simple.png" height="320" alt="Diagram">
-
-#### Master Only
-* Add a databank
+### Installation
 * Add a programming board
-* Connect the core and databank and screens to the programming board (any order, do not rename any of the slots)
+* Connect the core and screens to the programming board (any order, do not rename any of the slots)
 * Copy the [master_config.json](https://raw.githubusercontent.com/SamMackrill/InDUstrious/main/displaydriver/config/master_config.json) and paste it into the programming board
-* Add up to 9 monitor programming boards
-* Connect up to 9 industries and the databank to the monitor programming board (any order, do not rename any of the slots)
-* Copy the [monitor_config.json](https://raw.githubusercontent.com/SamMackrill/InDUstrious/main/monitor/config/monitor_config.json) and paste it into all the monitor programming boards
+* A databank is optional and not used currently
 
-### Installation - Expanded
-#### How it works
-<img src="images/industrious.png" height="320" alt="Diagram">
-
-#### Master
-* Add a master databank
-* Add a master programming board
-* Connect the core, master databank and screens to the master programming board (any order, do not rename the slots)
-* Copy the [master_config.json](https://raw.githubusercontent.com/SamMackrill/InDUstrious/main/displaydriver/config/master_config.json) and paste it into the programming board
-#### Remote Monitor(s)
-* Add a remote databank
-* Add upto 9 programming boards
-* Connect up to 9 industries and the databank to each remote monitor programming board (any order, do not rename the slots)
-* Copy the [monitor_config.json](https://raw.githubusercontent.com/SamMackrill/InDUstrious/main/monitor/config/monitor_config.json) and paste it into all the monitor programming boards
-#### Repeater(s)
-* Add a repeater programming board
-* Connect the repeater programming board to upto 9 remote databanks and the master databank (any order, do not rename the slots)
-* Copy the [repeater_config.json](https://raw.githubusercontent.com/SamMackrill/InDUstrious/main/repeater/config/repeater_config.json) and paste it into the programming board
+### Upgrading from V1.x.x
+* Remove all monitor programming boards, databanks and repeaters
+   * All data is now obdained directly from the core
 
 ### Installation - Optional
-* Name the industry machines after what they are producing
-* Add a button and relays to turn eveything on at once
 * Tweak the behaviour by right clicking the master programming board -> Advanced -> Edit Lua Parameters
 <img src="images/menu.png" height="320" alt="Menu">
 <img src="images/settings.png" alt="Settings">
