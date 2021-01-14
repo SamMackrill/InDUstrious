@@ -7,8 +7,7 @@ HighLevel = 50 --export Percent for high level indicator
 ContainerMatch = "C_(.+)" --export Match for single item Storage Container names (e.g. "C_Hematite")
 OverflowMatch = "O_(.+)" --export Match for single item Overflow Container names (e.g. "O_Hydrogen")
 ContRowsPerScreen = 20 --export Container rows per screen
-AssemRowsPerScreen = 24 --export Assembly rows per screen
-AlertRowsPerScreen = 24 -- Alert rows per screen
+ProdRowsPerScreen = 24 --export Production rows per screen
 AlignTop = false --export Align with top of screen
 WaitingAsAlarm = false --export Display waiting state with alarm colour
 KeepBlocksTogether = false  --Don't break blocks across displays
@@ -19,12 +18,14 @@ MonitorDelay = 3 --export Delay before Read operations are processed
 SkipHeadings = false --export No substance headings
 US_Spellings = false --export Expect American spellings
 
-contGap = 1.33 --export Cont Table gap
-prodGap = 0.4 --export Cont Table gap
+contGap = 1.33 --export Cont Table gap (temporary)
+prodGap = 0.4 --export Prod Table gap (temporary)
+prodBase = 95 --export Prod Table base (temporary)
+prodScale = 1.0 --export Prod Table scale (temporary)
 
-assemFontSize = 100.0 / AssemRowsPerScreen - prodGap
+local prodFontSize =  prodScale * (prodBase / ProdRowsPerScreen - prodGap)
 --alertFontSize = 100 / AlertRowsPerScreen - gap
-contFontSize = 100.0 / ContRowsPerScreen - contGap
+local contFontSize = 100 / ContRowsPerScreen - contGap
 
 -- These densities are not all quite accurate, yet
 properties = {
@@ -81,6 +82,7 @@ properties = {
     CuAg                = {density = 9.20},
     Duralumin           = {density = 2.80},
     ["Stainless steel"] = {density = 7.75, short = "S.Steel"};
+    Inconel             = {density = 8.5};
 
     Polycarbonate  = {density = 1.4,  short = "Polycarb"},
     Polycalcite    = {density = 1.5,  short = "Polycalc"},
@@ -118,6 +120,8 @@ local assemblies = {}
 local alerts = {}
 local schematicMainProduct = {[0]="Nothing"}
 local monitorIndex = 1
+local highlight = {on=false, id=0, stickers={}}
+local coreWorldOffset = 0
 
 function onStart()
 
@@ -141,6 +145,8 @@ function onStart()
 
     if not core then return end
 
+    coreWorldOffset = 2 ^ math.floor(math.log(core.getMaxHitPoints(),10) + 3)
+
     for slotName, slot in pairs(unit) do
         if slotValid(slot) then
             if slot.setHTML then 
@@ -153,18 +159,18 @@ function onStart()
                         index = tonumber(index)
                         if type=="Cont" then
                             if containerDisplays[index] then
-                                table.insert(containerDisplays[index], slot)
+                                containerDisplays[index].screens[id] = slot
                             else
-                                containerDisplays[index] = {slot}
+                                containerDisplays[index] = {screens={[id]=slot}}
                             end
-                            setMessage(slot, "Anaylsing Core for Containers...\nIf this text persists you may need to restart the master board")
+                            setMessage(slot, "If you see this you may need to restart the master board")
                         elseif type=="Prod" then
                             if productionDisplays[index] then
-                                table.insert(productionDisplays[index], slot)
+                                productionDisplays[index].screens[id] = slot
                             else
-                                productionDisplays[index] = {slot}
+                                productionDisplays[index] = {screens={[id]=slot}}
                             end
-                            setMessage(slot, "Anaylsing Core for Industry...\nIf this text persists you may need to restart the master board")
+                            setMessage(slot, "If you see this you may need to restart the master board")
                         end
                     end
                 end
@@ -281,6 +287,7 @@ tolColours = {
     red=    "#EE6677",
     purple= "#AA3377",
     grey=   "#BBBBBB",
+    darkYellow= "#666633",
 } -- https://personal.sron.nl/~pault/
 
 
@@ -313,7 +320,7 @@ local H = {
     de = [[</div>]];
 
     tc = [[<table style="font-size:]]..contFontSize..[[vh">]],
-    tp = [[<table style="font-size:]]..assemFontSize..[[vh">]],
+    tp = [[<table style="font-size:]]..prodFontSize..[[vh">]],
     te = [[</table>]];
 
     tr  = [[<tr>]],
@@ -485,9 +492,10 @@ function refreshContainerDisplay(displays)
     addRow("Polysulfide", "Fluoropolymer")
 
     addHeaderRow("Alloys", "Alloys")
-    addRow("Silumin", "Steel")
+    addRow("Silumin", "Duralumin")
     addRow("AlFe", "CaRefCu")
-    addRow("Stainless steel", "Duralumin")
+    addRow("Steel", "Stainless steel")
+    addRow("AlLi", "Inconel")
   
     addHeaderRow("T3 Ores", "T3 Pures")
     addRow("Petalite", "Lithium")
@@ -512,6 +520,7 @@ function refreshContainerDisplay(displays)
     addRow("Hydrogen", "Oxygen", true)
 
     function addDisplayRows(dId)
+        local displayRows = {}
         local html=H.d1..H.tc
         local startRow = #rows - ContRowsPerScreen * dId + 1
         local endRow = startRow + ContRowsPerScreen - 1
@@ -520,6 +529,7 @@ function refreshContainerDisplay(displays)
         for i = startRow, endRow do
             local row = rows[i]
             if not row then break end
+            table.insert(displayRows, row)
             if row.header then 
                 html=html..newHTMLHeader(row)
             else
@@ -528,14 +538,15 @@ function refreshContainerDisplay(displays)
             i = i + 1
         end
         html=html..H.te..H.de
-        return html
+        return html, displayRows
     end
 
-    for d, display in pairs(displays) do
-        local html = addDisplayRows(d)
-        for _, mirror in pairs(display) do
-            --system.print("Displaying on: "..core.getElementNameById(mirror.getId()).." @"..d)
-            mirror.setHTML(css..html)
+    for d, displaySet in pairs(displays) do
+        local html, displayRows = addDisplayRows(d)
+        displaySet.rows = displayRows
+        for id, display in pairs(displaySet.screens) do
+            --system.print("Displaying "..#displayRows.." rows on #"..id..": "..core.getElementNameById(id).." set@"..d)
+            display.setHTML(css..html)
         end
     end
 end
@@ -543,8 +554,8 @@ end
 function refreshIndustryScreens(displays)
     local rows = {}
 
-    function addRow(t1, t2, t3, t4, colour, size)
-        rows[#rows+1] = {text1=t1, text2=t2, text3=t3, text4=t4, colour=colour, size=size}
+    function addRow(id, t1, t2, t3, t4, colour, size)
+        rows[#rows+1] = {id=id, text1=t1, text2=t2, text3=t3, text4=t4, colour=colour, size=size}
     end
 
     function addHeaderRow(t1, t2, t3, t4)
@@ -575,7 +586,7 @@ function refreshIndustryScreens(displays)
             colour = alarmColour
         end
         local product = schematicMainProduct[alert.status.schematicId]
-        addRow(alert.shortType, product, alert.id, state, colour, alertFontSize)
+        addRow(alert.id, alert.shortType, product, alert.id, state, colour, alertFontSize)
     end
     
     -- Sort the assemblies
@@ -601,21 +612,30 @@ function refreshIndustryScreens(displays)
             elseif state == "STOPPED" 
                 or state == "PENDING" then       
                 colour = idleColour
+            elseif state == "JAMMED_OUTPUT_FULL" then       
+                colour = alarmColour
+                state = "OUTPUT FULL"
+            elseif state == "JAMMED_NO_OUTPUT_CONTAINER" then       
+                colour = alarmColour
+                state = "NO OUT"
             elseif state:find("JAMMED") == 1 then       
                 colour = alarmColour
             end
             --system.print(assembly.size.." ["..assembly.id.."] :"..state.." schem="..assembly.status.schematicId.." ("..colour..")")
             local product = schematicMainProduct[assembly.status.schematicId]
-            addRow(assembly.size, product, assembly.id, state, colour)
+            addRow(assembly.id, assembly.size, product, assembly.id, state, colour)
         end
     end
 
     function newHTMLRow(row)
         local style = ""
         if row.colour then style = style.." color:"..row.colour..";" end
+
+        if highlight.on and row.id==highlight.id then style = style.." background-color:"..tolColours.darkYellow..";" end
+
         if style then style = [[ style="]]..style..[["]] end
 
-        return [[<tr]]..style..[[">
+        return [[<tr]]..style..[[>
 ]]..H.thL..[[&nbsp;</th>
 ]]..H.thL..H.nbr..row.text1..H.nbre..[[</th>
 ]]..H.thL..H.nbr..row.text2..H.nbre..[[</th>
@@ -625,19 +645,23 @@ function refreshIndustryScreens(displays)
     end
 
     function newHTMLHeader(row)
-        return H.tr2..[[<th width=2%/><th width=23%>]]..row.text1..[[</th><th>]]..row.text2..[[</th><th width=8% style="text-align:right">]]..row.text3..[[&nbsp;</th><th width=16%>]]..row.text4..H.tre
+        return H.tr2..[[<th width=2%/><th width=24%>]]..row.text1..[[</th><th>]]..row.text2
+        ..[[</th><th width=8% style="text-align:right">]]..row.text3..[[&nbsp;</th><th width=15%>]]..row.text4
+        ..[[</th>]]..H.tre
     end
 
     function addDisplayRows(dId)
         --system.print("display="..dId.." rows="..#rows.." rps="..ProdRowsPerScreen)
+        local displayRows = {}
         local html=H.d1..H.tp
-        local startRow = #rows - AssemRowsPerScreen * dId + 1
-        local endRow = startRow + AssemRowsPerScreen - 1
+        local startRow = #rows - ProdRowsPerScreen * dId + 1
+        local endRow = startRow + ProdRowsPerScreen - 1
         startRow = math.max(startRow , 1)
         --system.print("row range "..startRow..":"..endRow)
         for i = startRow, endRow do
             local row = rows[i]
             if not row then break end
+            table.insert(displayRows, row)
             if row.header then 
                 html=html..newHTMLHeader(row)
             else
@@ -646,14 +670,15 @@ function refreshIndustryScreens(displays)
             i = i + 1
         end
         html=html..H.te..H.de
-        return html
+        return html, displayRows
     end
 
-    for d, display in pairs(displays) do
-        local html = addDisplayRows(d)
-        for _, mirror in pairs(display) do
-            --system.print("Displaying on: "..core.getElementNameById(mirror.getId()).." @"..d)
-            mirror.setHTML(css..html)
+    for d, displaySet in pairs(displays) do
+        local html, displayRows = addDisplayRows(d)
+        displaySet.rows = displayRows
+        for id, display in pairs(displaySet.screens) do
+            --system.print("Displaying "..#displayRows.." rows on: "..core.getElementNameById(id).." @"..d)
+            display.setHTML(css..html)
         end
     end
 
@@ -669,7 +694,6 @@ function processFirst()
     unit.stopTimer("First")
     refreshScreens()
 end
-
 
 function processChanges()
 
@@ -788,7 +812,7 @@ function screenClicked(x, y, id, screen, rows)
     system.print("Clicked on #"..id.." : "..core.getElementNameById(id).." @("..x..", "..y..")")
 
     system.print("Display has "..#rows)
-    local rowIndex = math.floor(#rows - AssemRowsPerScreen * (1- y) + 1)
+    local rowIndex = math.floor(#rows - ProdRowsPerScreen * (1- y) + 1)
     system.print("rowIndex "..rowIndex)
     local row = rows[rowIndex]
     system.print("row id "..tostring(row.id))
@@ -803,6 +827,10 @@ function screenClicked(x, y, id, screen, rows)
 end
 
 function onClick(x, y)
+    -- not enabled yet
+end
+
+function onClickFeature(x, y)
     system.print("Click: ("..x..", "..y..")")
     for d, displaySet in pairs(productionDisplays) do
         for id, screen in pairs(displaySet.screens) do
