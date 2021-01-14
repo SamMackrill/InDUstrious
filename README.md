@@ -3,7 +3,7 @@ Screens for a Dual Universe Industrial Control Room, by Smacker:
 ###### In game: Smacker, Discord: Smacker#5268
 Discord Channel: https://discord.gg/Gw5HWJhXFR
 
-<img src="images/mon01.png" height="320" alt="Alerts"> <img src="images/mon02.png" height="320" alt="Ores & Pures">
+<img src="images/mon01.png" height="300" alt="Alerts"> <img src="images/mon02.png" height="300" alt="Ores & Pures">
 
 ### Introduction
 Screen based factory monitor, simulating a real control room
