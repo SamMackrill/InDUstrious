@@ -791,7 +791,7 @@ end
 
 -- Credit to DorianTheGrey for approach
 function HighlightElement(id)
-    system.print("Highlighting id="..id)
+    --system.print("Highlighting id="..id)
     if highlight.on then HideHighlight() end
     highlight.id = id
     local pos = vec3(core.getElementPositionById(id))
@@ -801,7 +801,7 @@ function HighlightElement(id)
     --local rot = core.getElementRotationById(id)
     --system.print("Rot="..json.encode(rot))
     local size = 3.1 * (math.log(core.getElementMassById(id), 10) - 1.0)
-    system.print("Size="..size)
+    --system.print("Size="..size)
     highlight.xoffset = size
     highlight.yoffset = size
     highlight.zoffset = size
@@ -809,13 +809,13 @@ function HighlightElement(id)
 end
 
 function screenClicked(x, y, id, screen, rows)
-    system.print("Clicked on #"..id.." : "..core.getElementNameById(id).." @("..x..", "..y..")")
+    --system.print("Clicked on #"..id.." : "..core.getElementNameById(id).." @("..x..", "..y..")")
 
-    system.print("Display has "..#rows)
+    --system.print("Display has "..#rows)
     local rowIndex = math.floor(#rows - ProdRowsPerScreen * (1- y) + 1)
-    system.print("rowIndex "..rowIndex)
+    --system.print("rowIndex "..rowIndex)
     local row = rows[rowIndex]
-    system.print("row id "..tostring(row.id))
+    --system.print("row id "..tostring(row.id))
     if not row.id then return end
 
     if row.id == highlight.id then   
@@ -827,11 +827,7 @@ function screenClicked(x, y, id, screen, rows)
 end
 
 function onClick(x, y)
-    -- not enabled yet
-end
-
-function onClickFeature(x, y)
-    system.print("Click: ("..x..", "..y..")")
+    --system.print("Click: ("..x..", "..y..")")
     for d, displaySet in pairs(productionDisplays) do
         for id, screen in pairs(displaySet.screens) do
             --system.print("Checking #"..id.." : "..core.getElementNameById(id))
