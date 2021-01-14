@@ -11,6 +11,7 @@ Screen based factory monitor, simulating a real control room
 * Can designate containers as overflows
 * Can monitor industry unit states and display any issues (like being jammed)
   * Will not clutter the display with units that are in a normal state (running, pending, stopped etc)
+* Find function, will decorate clicked industry unit with arrows
 * Supports US spellings
 
 ### Notes
