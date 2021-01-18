@@ -1,4 +1,4 @@
-local version = "V2.1.1"
+local version = "V2.1.2"
 
 PlayerContainerProficiency = 30 --export Your Container Proficiency bonus in total percent (Skills->Mining and Inventory->Inventory Manager)
 PlayerContainerOptimization = 0 --export Your Container Optimization bonus in total percent (Skills->Mining and Inventory->Stock Control)
@@ -24,7 +24,7 @@ prodGap = 0.4 --export Prod Table gap (temporary)
 prodBase = 95 --export Prod Table base (temporary)
 prodScale = 1.0 --export Prod Table scale (temporary)
 
-contDebug = true --export Container Debug Flag
+contDebug = false --export Container Debug Flag
 
 local prodFontSize =  prodScale * (prodBase / ProdRowsPerScreen - prodGap)
 --alertFontSize = 100 / AlertRowsPerScreen - gap
@@ -619,7 +619,13 @@ function refreshIndustryScreens(displays)
     for k in pairs(alerts) do table.insert(alertkeys, k) end
     table.sort(alertkeys)
 
-    addHeaderRow("Machine", "Making", "#", "Alert")
+    -- Sort the assemblies
+    local assemkeys = {}
+    for k in pairs(assemblies) do table.insert(assemkeys, k) end
+    table.sort(assemkeys)
+
+    local checkingTotal = #industries - #assemkeys
+    addHeaderRow("Machine", "Making ["..#alertkeys.."/"..checkingTotal.."]", "#", "Alert")
     for _, k in ipairs(alertkeys) do
         local alert = alerts[k]
         local colour = alarmColour
@@ -641,10 +647,6 @@ function refreshIndustryScreens(displays)
         addRow(alert.id, alert.shortType, product, alert.id, state, colour, alertFontSize)
     end
     
-    -- Sort the assemblies
-    local assemkeys = {}
-    for k in pairs(assemblies) do table.insert(assemkeys, k) end
-    table.sort(assemkeys)
 
     if #assemkeys>0 then 
         addHeaderRow("Assm.", "Making", "#", "Status")
