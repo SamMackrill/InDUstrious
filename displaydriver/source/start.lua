@@ -1,4 +1,4 @@
-local version = "V2.0.0"
+local version = "V2.1.0"
 
 PlayerContainerProficiency = 30 --export Your Container Proficiency bonus in total percent (Skills->Mining and Inventory->Inventory Manager)
 PlayerContainerOptimization = 0 --export Your Container Optimization bonus in total percent (Skills->Mining and Inventory->Stock Control)
@@ -6,7 +6,7 @@ LowLevel = 25 --export Percent for low level indicator
 HighLevel = 50 --export Percent for high level indicator
 ContainerMatch = "C_(.+)" --export Match for single item Storage Container names (e.g. "C_Hematite")
 OverflowMatch = "O_(.+)" --export Match for single item Overflow Container names (e.g. "O_Hydrogen")
-DisplayBlocks = "pl al t3 t2 t1 ga" --export Container types to display from top to bottom (t1-t5, pl, al, ga)
+DisplayBlocks = "t5 t4 pl al t3 t2 t1 ga" --export Container types to display from top to bottom (t1-t5, pl, al, ga)
 ContRowsPerScreen = 20 --export Container rows per screen
 ProdRowsPerScreen = 24 --export Production rows per screen
 AlignTop = false --export Align with top of screen
