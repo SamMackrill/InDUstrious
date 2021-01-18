@@ -41,7 +41,7 @@ Wiki has FAQ: https://github.com/SamMackrill/InDUstrious/wiki
 
 ### Installation
 * Add a programming board
-* Connect the core and screens to the programming board (any order, do not rename any of the slots)
+* Connect from the programming board to the core and screens (any order, do not rename any of the slots)
 * Copy the [master_config.json](https://raw.githubusercontent.com/SamMackrill/InDUstrious/main/displaydriver/config/master_config.json) and paste it into the programming board
 * A databank is optional and not used currently
 
