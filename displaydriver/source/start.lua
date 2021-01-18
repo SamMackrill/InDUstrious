@@ -1,4 +1,4 @@
-local version = "V2.1.0"
+local version = "V2.1.1"
 
 PlayerContainerProficiency = 30 --export Your Container Proficiency bonus in total percent (Skills->Mining and Inventory->Inventory Manager)
 PlayerContainerOptimization = 0 --export Your Container Optimization bonus in total percent (Skills->Mining and Inventory->Stock Control)
@@ -23,6 +23,8 @@ contGap = 1.33 --export Cont Table gap (temporary)
 prodGap = 0.4 --export Prod Table gap (temporary)
 prodBase = 95 --export Prod Table base (temporary)
 prodScale = 1.0 --export Prod Table scale (temporary)
+
+contDebug = true --export Container Debug Flag
 
 local prodFontSize =  prodScale * (prodBase / ProdRowsPerScreen - prodGap)
 --alertFontSize = 100 / AlertRowsPerScreen - gap
@@ -202,6 +204,7 @@ function onStart()
         screen.setHTML(html)
     end
 
+    -- Process connected slots
     for slotName, slot in pairs(unit) do
         if slotValid(slot) then
             if slot.setHTML then 
@@ -219,6 +222,7 @@ function onStart()
 
     coreWorldOffset = 2 ^ math.floor(math.log(core.getMaxHitPoints(),10) + 3)
 
+    -- Find displays
     for slotName, slot in pairs(unit) do
         if slotValid(slot) then
             if slot.setHTML then 
@@ -277,24 +281,28 @@ function onStart()
         local name = core.getElementNameById(id)
         if not name then return true end
 
+        if contDebug then system.print("Checking container: "..name.." ["..id.."] against name matches") end
         local overflow = false
         local substance = string.match(name, "^"..ContainerMatch)
         if not substance then 
             substance = string.match(name, "^"..OverflowMatch)
             if not substance then
-                --system.print("Ignoring container: "..name.." ["..id.."]")
+                if contDebug then system.print("  Ignoring because no name match") end
                 return 
             end
             overflow = true
         end
 
         local property = properties[substance]
-        if not property then return true end
+        if not property then 
+            if contDebug then system.print("  Ignoring because "..substance.." not tracked") end
+            return true 
+        end
 
         local selfMass, baseVolume = getBaseCointainerProperties(id)
         capacity = baseVolume*(1.0 + PlayerContainerProficiency/100)
 
-        --system.print("Adding container: "..name.. " ["..id.."]")
+        if contDebug then system.print("Adding container: "..name.." ["..id.."] storing "..substance) end
         containers[id] = {
             name=name, 
             id=id, 
@@ -333,6 +341,7 @@ function onStart()
         return true
     end
     
+    -- Find Containers and Industry
     local elementsIds = core.getElementIdList()
     for _,id in ipairs(elementsIds) do
         local type = core.getElementTypeById(id)
@@ -444,6 +453,9 @@ function refreshContainerDisplay(displays)
                 capacity = container.capacity,
                 overflow = container.overflow,
             }
+        end
+        if contDebug then 
+            system.print(container.name.." "..container.substance.." : contentMass : "..outputData[key].contentMass)
         end
         -- if outputData[key].volume-container.capacity > .5 then
         --     system.print(container.substance.." : volume > capacity")
@@ -730,14 +742,14 @@ function refreshScreens()
 end
 
 function processFirst()
-    --system.print("Tick First")
+    if contDebug then system.print("Tick First") end
     unit.stopTimer("First")
     refreshScreens()
 end
 
 function processChanges()
 
-    --system.print("Tick Statuses")
+    if contDebug then system.print("Tick Statuses") end
 
     function lookupSchematic(schematicId)
         if schematicMainProduct[schematicId] then return end
@@ -789,7 +801,7 @@ end
 
 
 function processTick()   
-    --system.print("Tick Live")
+    if contDebug then system.print("Tick Live") end
     --local ok, msg = xpcall(function ()
 
         refreshScreens()
