@@ -53,6 +53,20 @@ Wiki has FAQ: https://github.com/SamMackrill/InDUstrious/wiki
 * Copy the [master_config.json](https://raw.githubusercontent.com/SamMackrill/InDUstrious/main/displaydriver/config/master_config.json) and paste it into the programming board
 * A databank is optional and not used currently
 
+### Find Feature
+ * Click on an industry line to display floating arrows in your factory
+ * Click again to hide them
+ <img src="images/findhilight.png" alt="Find Hilight">
+ <img src="images/found.png" alt="Found Arrows">
+
+### Container Block Display
+ * Change the DisplayBlocks setting to control which blocks are shown and in which order
+   * e.g. "pl al t3 t2 t1 ga"
+     * t1-5 for TierX Ores and Pures
+     * pl (plastics)
+     * al (alloys)
+     * ga (gasses)
+
 ### Upgrading from V1.x.x
 * Remove all monitor programming boards, databanks and repeaters
    * All data is now obtained directly from the core
