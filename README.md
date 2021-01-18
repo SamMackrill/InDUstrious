@@ -5,6 +5,13 @@ Discord Channel: https://discord.gg/Gw5HWJhXFR
 
 <img src="images/mon01.png" height="300" alt="Alerts"> <img src="images/mon02.png" height="300" alt="Ores & Pures">
 
+### Quickstart
+ * Rename your containers
+ * Add a programming board and screens
+ * Rename screens
+ * Connect programming board to core and screens
+ * Paste in programming board json
+ 
 ### Introduction
 Screen based factory monitor, simulating a real control room
 * Can monitor container contents if they have a single item
@@ -13,6 +20,7 @@ Screen based factory monitor, simulating a real control room
   * Will not clutter the display with units that are in a normal state (running, pending, stopped etc)
 * Auto detects currently active Schematic
 * Find function, will decorate clicked industry unit with arrows
+* Container block displays can be configured in in order
 * Supports US spellings
 
 ### Notes
@@ -48,6 +56,7 @@ Wiki has FAQ: https://github.com/SamMackrill/InDUstrious/wiki
 ### Upgrading from V1.x.x
 * Remove all monitor programming boards, databanks and repeaters
    * All data is now obtained directly from the core
+   * Use the [master_config.json](https://raw.githubusercontent.com/SamMackrill/InDUstrious/main/displaydriver/config/master_config.json) to update not just the start.lua
 
 ### Installation - Optional
 * Tweak the behaviour by right clicking the master programming board -> Advanced -> Edit Lua Parameters
