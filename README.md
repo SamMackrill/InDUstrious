@@ -20,7 +20,7 @@ Screen based factory monitor, simulating a real control room
   * Will not clutter the display with units that are in a normal state (running, pending, stopped etc)
 * Auto detects currently active Schematic
 * Find function, will decorate clicked industry unit with arrows
-* Container block displays can be configured in in order
+* Container block displays can be configured in any order
 * Supports US spellings
 
 ### Notes
