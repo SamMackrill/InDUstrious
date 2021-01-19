@@ -277,7 +277,8 @@ function onStart()
     end
 
     function addContainer(id, type)
-        if string.lower(type)~="container" then return false end
+        --if id==172 then system.print("Checking "..type.." ["..id.."]") end
+        if not string.lower(type):match("^container") then  return false end
         local name = core.getElementNameById(id)
         if not name then return true end
 
