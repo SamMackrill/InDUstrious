@@ -85,10 +85,10 @@ Acanthite | AlFe | AlLi | Aluminium | Bauxite | Calcium | Carbon | CaRefCu
 Chromite | Chromium | Coal | Cobalt | Cobaltite | Columbite | Copper | Cryolite
 CuAg | Duralumin | Fluorine | Fluoropolymer | Garnierite | Glass | Advanced glass
 AgLi reinforced glass | Gold coated glass | Gold | GoldNuggets | Hematite | Hydrogen | Illmenite | Iron
-Kolbeckite | Limestone | Lithium | Malachite | Manganese
-Natron | Nickel | Niobium | Oxygen | Petalite | Polycalcite | Polycarbonate | Polysulfide
-Pyrite | Quartz | Rhodonite | Scandium | Silicon | Silumin | Silver | Sodium
-Stainless steel | Steel | Sulfur | Titanium | Vanadinite | Vanadium
+Kolbeckite | Limestone | Lithium | Malachite | Manganese | Natron | Nickel | Niobium
+Oxygen | Petalite | Polycalcite | Polycarbonate | Polysulfide | Pyrite | Quartz | Rhodonite
+Scandium | Silicon | Silumin | Silver | Sodium | Stainless steel | Steel | Sulfur
+Titanium | Vanadinite | Vanadium
 
 ## Credits
 * badman74 for initial approach: https://github.com/badman74/DU
