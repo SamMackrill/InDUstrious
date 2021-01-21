@@ -1,4 +1,4 @@
-local version = "V2.1.3"
+local version = "V2.1.4"
 
 PlayerContainerProficiency = 30 --export Your Container Proficiency bonus in total percent (Skills->Mining and Inventory->Inventory Manager)
 PlayerContainerOptimization = 0 --export Your Container Optimization bonus in total percent (Skills->Mining and Inventory->Stock Control)
@@ -6,7 +6,7 @@ LowLevel = 25 --export Percent for low level indicator
 HighLevel = 50 --export Percent for high level indicator
 ContainerMatch = "C_(.+)" --export Match for single item Storage Container names (e.g. "C_Hematite")
 OverflowMatch = "O_(.+)" --export Match for single item Overflow Container names (e.g. "O_Hydrogen")
-DisplayBlocks = "t5 t4 pl al t3 t2 t1 ga" --export Container types to display from top to bottom (t1-t5, pl, al, ga)
+DisplayBlocks = "t5 t4 gl pl al t3 t2 t1 ga" --export Container types to display from top to bottom (t1-t5, pl, al, ga, gl)
 ContRowsPerScreen = 20 --export Container rows per screen
 ProdRowsPerScreen = 24 --export Production rows per screen
 AlignTop = false --export Align with top of screen
@@ -92,6 +92,11 @@ properties = {
     Polysulfide    = {density = 1.6,  short = "Polysulf"},
     Fluoropolymer  = {density = 1.65, short = "Fl.Poly"};
 
+    Glass                     = {density = 2.5},
+    ["Advanced glass"]        = {density = 2.6,  short = "Adv.Glass"},
+    ["AgLi reinforced glass"] = {density = 2.8,  short = "AgLi Glass"},
+    ["Gold coated glass"]     = {density = 3.0,  short = "Gold Glass"},
+
 }
 
 
@@ -119,6 +124,13 @@ local blocks = {
         Rows = {
             {"Polycarbonate", "Polycalcite"},
             {"Polysulfide", "Fluoropolymer"},
+        },
+    },
+    gl = {    
+        Headers = {"Glass", "Glass"},
+        Rows = {
+            {"Glass", "Advanced glass"},
+            {"AgLi reinforced glass", "Gold coated glass"},
         },
     },
     al = {    
