@@ -1,4 +1,4 @@
-local version = "V2.1.4"
+local version = "V2.1.5"
 
 PlayerContainerProficiency = 30 --export Your Container Proficiency bonus in total percent (Skills->Mining and Inventory->Inventory Manager)
 PlayerContainerOptimization = 0 --export Your Container Optimization bonus in total percent (Skills->Mining and Inventory->Stock Control)
@@ -12,10 +12,12 @@ ProdRowsPerScreen = 24 --export Production rows per screen
 AlignTop = false --export Align with top of screen
 WaitingAsAlarm = false --export Display waiting state with alarm colour
 KeepBlocksTogether = false  --Don't break blocks across displays
-DataThrottle = 50 --export Maximum read/writes to process each update, lower this if you get CPU overloads
-FirstDelay = .3 --export Delay before First calculations
+AnalyseThrottle = 500 --export Maximum Core Elements to process at once, lower this if you get an immediate CPU overload
+DataThrottle = 50 --export Maximum changes to process each update, lower this if you get CPU overloads after some time
+AnalyseDelay = .3 --export Rate at which core elements are initially analysed
+FirstDelay = .3 --export Delay before First calculations after analyse completes
 RefreshDelay = 5 --export Screen Refresh Rate
-MonitorDelay = 3 --export Delay before Read operations are processed
+MonitorDelay = 3 --export Rate at which changes are processed
 SkipHeadings = false --export No substance headings
 US_Spellings = false --export Expect American spellings
 
@@ -25,6 +27,7 @@ prodBase = 95 --export Prod Table base (temporary)
 prodScale = 1.0 --export Prod Table scale (temporary)
 
 contDebug = false --export Container Debug Flag
+overloadDebug = false --export CPU overload Debug Flag
 
 local prodFontSize =  prodScale * (prodBase / ProdRowsPerScreen - prodGap)
 --alertFontSize = 100 / AlertRowsPerScreen - gap
@@ -211,6 +214,7 @@ local coreWorldOffset = 0
 
 function onStart()
 
+    if overloadDebug then system.print("onStart") end
     function setMessage(screen, text)
         local html = [[<div style="width:100vw"><div style="margin-top: 20vw;padding: 10vw; font-size: 4em;width: 100vw;display: inline-block;">]]..text..[[</div></div>]] 
         screen.setHTML(html)
@@ -230,7 +234,16 @@ function onStart()
         end
     end
 
-    if not core then return end
+    if not core then 
+        for slotName, slot in pairs(unit) do
+            if slotValid(slot) then
+                if slot.setHTML then 
+                    setMessage(slot, "Core Unit must be connected to the master board")
+                end
+            end
+        end
+        return 
+    end
 
     coreWorldOffset = 2 ^ math.floor(math.log(core.getMaxHitPoints(),10) + 3)
 
@@ -265,6 +278,11 @@ function onStart()
             end
         end
     end
+end
+
+function analyseCore()
+
+    if overloadDebug then system.print("Analyse Core") end
 
     function extractSubstanceName(name, match)
         local substance = string.gsub(name, match, "")
@@ -289,6 +307,7 @@ function onStart()
     end
 
     function addContainer(id, type)
+        if #containerDisplays==0 then return false end
         --if id==172 then system.print("Checking "..type.." ["..id.."]") end
         if not string.lower(type):match("^container") then  return false end
         local name = core.getElementNameById(id)
@@ -330,21 +349,27 @@ function onStart()
     end
 
     function addIndustry(id, type)
+        if #productionDisplays==0 then return false end
+
         local tier, machine = string.match(type, "(%S+)%s(.+)")
         if not tier or not machine then return false end
-        --system.print("tier: >"..tier.."< : >"..industry.."<")
-        if not tiers[tier] then return false end
+        --if id==65 then 
+        --    system.print("type: >"..type.."<")
+        --    system.print("tier: >"..tier.."< : >"..machine.."<")
+        --end
+        local lowTier = string.lower(tier)
+        if not tiers[lowTier] then return false end
         local name = core.getElementNameById(id)
-        --system.print("Adding "..industry..": "..name.. " ["..id.."]")
+        --system.print("Adding "..machine..": "..name.. " ["..id.."]")
 
         local lowMachine = string.lower(machine)
         local shortType = shortTypes[lowMachine] or machine
         --system.print(id.." : "..machine.."["..name.."]")
-        local industry = {name=name, industry=machine, shortType=shortType, id=id, tier=tier}
+        local industry = {name=name, industry=machine, shortType=shortType, id=id, tier=lowTier}
         if lowMachine=="assembly line" then
             industry.assembly = true
             local sizeIndex, size = assemblySize(id)
-            industry.sortKey = sizeIndex * 10000 + id
+            industry.sortKey = sizeIndex * 100000 + tiers[lowTier] * 10000 + id
             industry.size = size
             --system.print(id.." Assembly "..industry.name.." "..size)
         else
@@ -356,11 +381,19 @@ function onStart()
     
     -- Find Containers and Industry
     local elementsIds = core.getElementIdList()
+    local maxToProcess = AnalyseThrottle
+    local leftToProcess = #elementsIds
     for _,id in ipairs(elementsIds) do
         local type = core.getElementTypeById(id)
         --system.print("Element: "..core.getElementNameById(id).." : "..type.. " ["..id.."]")
         if not addContainer(id, type) then
             addIndustry(id, type)
+        end
+        maxToProcess = maxToProcess - 1
+        leftToProcess = leftToProcess - 1
+        if maxToProcess==0 then 
+            coroutine.yield(leftToProcess)
+            maxToProcess = AnalyseThrottle
         end
     end
 end
@@ -580,10 +613,6 @@ function refreshContainerDisplay(displays)
         end
     end
 
-    --addHeaderRow("H₂", "O₂")
-    --addRow("Hydrogen", "Oxygen")
-    --addRow("Hydrogen", "Oxygen", true)
-
     function addDisplayRows(dId)
         local displayRows = {}
         local html=H.d1..H.tc
@@ -624,7 +653,7 @@ function refreshIndustryScreens(displays)
     end
 
     function addHeaderRow(t1, t2, t3, t4)
-        rows[#rows+1] = {text1=t1, text2=t2, text3=t3, text4=t4, header=true}
+        if not SkipHeadings then rows[#rows+1] = {text1=t1, text2=t2, text3=t3, text4=t4, header=true} end
     end
 
     -- Sort the alerts
@@ -660,7 +689,6 @@ function refreshIndustryScreens(displays)
         addRow(alert.id, alert.shortType, product, alert.id, state, colour, alertFontSize)
     end
     
-
     if #assemkeys>0 then 
         addHeaderRow("Assm.", "Making", "#", "Status")
         for _, k in pairs(assemkeys) do
@@ -688,9 +716,11 @@ function refreshIndustryScreens(displays)
             elseif state:find("JAMMED") == 1 then       
                 colour = alarmColour
             end
-            --system.print(assembly.size.." ["..assembly.id.."] :"..state.." schem="..assembly.status.schematicId.." ("..colour..")")
+            --if assembly.id==65 then 
+            --    system.print(assembly.tier.." "..assembly.size.." ["..assembly.id.."] :"..state.." schem="..assembly.status.schematicId.." ("..colour..")")
+            --end
             local product = schematicMainProduct[assembly.status.schematicId]
-            addRow(assembly.id, assembly.size, product, assembly.id, state, colour)
+            addRow(assembly.id, assembly.size.."-T"..tiers[assembly.tier], product, assembly.id, state, colour)
         end
     end
 
@@ -757,14 +787,14 @@ function refreshScreens()
 end
 
 function processFirst()
-    if contDebug then system.print("Tick First") end
+    if contDebug or overloadDebug then system.print("Tick First") end
     unit.stopTimer("First")
     refreshScreens()
 end
 
 function processChanges()
 
-    if contDebug then system.print("Tick Statuses") end
+    if contDebug or overloadDebug then system.print("Tick Statuses") end
 
     function lookupSchematic(schematicId)
         if schematicMainProduct[schematicId] then return end
@@ -792,7 +822,7 @@ function processChanges()
             return 
         end
 
-        if status.state:find("JAMMED") == 1 then       
+        if status.state and status.state:find("JAMMED") == 1 then       
             lookupSchematic(status.schematicId)
             --system.print("Alert: "..industry.name.." ["..industry.id.."] making:"..schematicMainProduct[status.schematicId])
             alerts[industry.sortKey] = industry
@@ -802,7 +832,7 @@ function processChanges()
     end
 
     local maxToProcess = math.min(DataThrottle, #industries)
-    --system.print("#industries="..#industries.." max="..maxToProcess.." DataThrottle="..DataThrottle)
+    if overloadDebug then system.print("#industries="..#industries.." max="..maxToProcess.." DataThrottle="..DataThrottle)  end
     
     local index = monitorIndex
     for i = 1, maxToProcess do
@@ -816,7 +846,7 @@ end
 
 
 function processTick()   
-    if contDebug then system.print("Tick Live") end
+    if contDebug or overloadDebug then system.print("Tick Live") end
     --local ok, msg = xpcall(function ()
 
         refreshScreens()
@@ -908,12 +938,31 @@ function onClick(x, y)
     end
 end
 
+function processAnalysis()   
+    unit.stopTimer("Analyse")
+    if overloadDebug then system.print("Analyse Tick") end
+    local _, elementsLeft = coroutine.resume(AnalyseCo)
+    if elementsLeft then
+       if overloadDebug then system.print("Analyse yielded, elements left: "..elementsLeft) end
+       unit.setTimer("Analyse", AnalyseDelay)
+       return
+    end
+
+    unit.setTimer("First", FirstDelay)
+    unit.setTimer("Live", RefreshDelay)
+    unit.setTimer("MonitorChanges", MonitorDelay)
+
+end
+
 --unit.hide()
 system.print("InDUstry Status "..version)
 local databank = nil
 
 onStart()
 
-unit.setTimer("First", FirstDelay)
-unit.setTimer("Live", RefreshDelay)
-unit.setTimer("MonitorChanges", MonitorDelay)
+if not core then
+    system.print("InDUstrious Error: Core must be linked to a slot")
+else
+    AnalyseCo = coroutine.create(analyseCore)
+    unit.setTimer("Analyse", AnalyseDelay)
+end
