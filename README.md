@@ -38,9 +38,10 @@ Wiki has FAQ: https://github.com/SamMackrill/InDUstrious/wiki
 ## In Game Setup
 * Name the containers (including hubs) as C_XXXX where XXXX is the name of what is being stored e.g. C_Bauxite
   * If you have multiple containers and hubs with the same content then name them all the same
-* Name the overflow containers (including hubs) as O_XXXX where XXXX is the name of what is being stored e.g. O_Hydrogen
+  * Case is significant (see below for handy table)
+* Name the (optional) overflow containers (including hubs) as O_XXXX where XXXX is the name of what is being stored e.g. O_Hydrogen
 * Some substance names cannot be matched exactly as NQ forbid certain characters in custom names (see below for list)
-* Add large/medium screens, 2 x 2 layout of large screens seems best
+* Add large/medium screens, 2 x 2 layout of large screens seems to work well for medium factories
 * Rename the screens (not the slots) exactly:
   * ContDisplay1, ContDisplay2, ContDisplay3 etc
   * ProdDisplay1, ProdDisplay2, ProdDisplay3 etc
