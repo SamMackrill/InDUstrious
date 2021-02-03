@@ -65,7 +65,9 @@ Wiki has FAQ: https://github.com/SamMackrill/InDUstrious/wiki
    * e.g. "pl al t3 t2 t1 ga"
      * t1-5 for TierX Ores and Pures
      * pl (plastics)
-     * al (alloys)
+     * al (all alloys)
+     * a1 (lower alloys)
+     * a2 (higher alloys)
      * ga (gasses)
      * gl (glass)
 
@@ -83,14 +85,14 @@ Wiki has FAQ: https://github.com/SamMackrill/InDUstrious/wiki
 
 _ | _ | _ | _ | _ | _ | _ | _
 -- | -- | -- | -- | -- | -- | -- | --
-Acanthite | AlFe | AlLi | Aluminium | Bauxite | Calcium | Carbon | CaRefCu
-Chromite | Chromium | Coal | Cobalt | Cobaltite | Columbite | Copper | Cryolite
-CuAg | Duralumin | Fluorine | Fluoropolymer | Garnierite | Glass | Advanced glass
-AgLi reinforced glass | Gold coated glass | Gold | GoldNuggets | Hematite | Hydrogen | Illmenite | Iron
-Kolbeckite | Limestone | Lithium | Malachite | Manganese | Natron | Nickel | Niobium
-Oxygen | Petalite | Polycalcite | Polycarbonate | Polysulfide | Pyrite | Quartz | Rhodonite
-Scandium | Silicon | Silumin | Silver | Sodium | Stainless steel | Steel | Sulfur
-Titanium | Vanadinite | Vanadium
+Acanthite      | Advanced glass        | AgLi reinforced glass | AlFe      | AlLi        | Aluminium     | Bauxite        | Calcium
+Carbon         | CaRefCu               | Chromite              | Chromium  | Coal        | Cobalt        | Cobaltite      | Columbite
+Copper         | Cryolite              | CuAg                  | Duralumin | Fluorine    | Fluoropolymer | Garnierite     | Glass
+Advanced glass | AgLi reinforced glass | Gold coated glass     | Gold      | GoldNuggets | Hematite      | Hydrogen       | Illmenite
+Iron           | Kolbeckite            | Limestone             | Lithium   | Malachite   | Manganese     | Maraging steel | Natron
+Nickel         | Niobium               | Oxygen                | Petalite  | Polycalcite | Polycarbonate | Polysulfide    | Pyrite
+Quartz         | Red gold              | Rhodonite             | ScAl      | Scandium    | Silicon       | Silumin        | Silver
+Sodium         | Stainless steel       | Steel                 | Sulfur    | Titanium    | Vanadinite    | Vanadium
 
 ## Credits
 * badman74 for initial approach: https://github.com/badman74/DU
