@@ -1,4 +1,4 @@
-local version = "V2.1.5"
+local version = "V2.1.6"
 
 PlayerContainerProficiency = 30 --export Your Container Proficiency bonus in total percent (Skills->Mining and Inventory->Inventory Manager)
 PlayerContainerOptimization = 0 --export Your Container Optimization bonus in total percent (Skills->Mining and Inventory->Stock Control)
@@ -12,7 +12,7 @@ ProdRowsPerScreen = 24 --export Production rows per screen
 AlignTop = false --export Align with top of screen
 WaitingAsAlarm = false --export Display waiting state with alarm colour
 KeepBlocksTogether = false  --Don't break blocks across displays
-AnalyseThrottle = 500 --export Maximum Core Elements to process at once, lower this if you get an immediate CPU overload
+AnalyseThrottle = 400 --export Maximum Core Elements to process at once, lower this if you get an immediate CPU overload
 DataThrottle = 50 --export Maximum changes to process each update, lower this if you get CPU overloads after some time
 AnalyseDelay = .3 --export Rate at which core elements are initially analysed
 FirstDelay = .3 --export Delay before First calculations after analyse completes
