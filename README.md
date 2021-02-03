@@ -65,7 +65,9 @@ Wiki has FAQ: https://github.com/SamMackrill/InDUstrious/wiki
    * e.g. "pl al t3 t2 t1 ga"
      * t1-5 for TierX Ores and Pures
      * pl (plastics)
-     * al (alloys)
+     * al (all alloys)
+     * a1 (lower alloys)
+     * a2 (higher alloys)
      * ga (gasses)
      * gl (glass)
 
