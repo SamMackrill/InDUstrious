@@ -6,7 +6,7 @@ LowLevel = 25 --export Percent for low level indicator
 HighLevel = 50 --export Percent for high level indicator
 ContainerMatch = "C_(.+)" --export Match for single item Storage Container names (e.g. "C_Hematite")
 OverflowMatch = "O_(.+)" --export Match for single item Overflow Container names (e.g. "O_Hydrogen")
-DisplayBlocks = "t5 t4 gl pl al t3 t2 t1 ga" --export Container types to display from top to bottom (t1-t5, pl, al, ga, gl)
+DisplayBlocks = "t5 t4 gl pl a1 t3 t2 t1 ga" --export Container types to display from top to bottom (t1-t5, pl, al, a1, a2, ga, gl)
 ContRowsPerScreen = 20 --export Container rows per screen
 ProdRowsPerScreen = 24 --export Production rows per screen
 AlignTop = false --export Align with top of screen
@@ -89,6 +89,9 @@ properties = {
     Duralumin           = {density = 2.80},
     ["Stainless steel"] = {density = 7.75, short = "S.Steel"};
     Inconel             = {density = 8.5};
+    ["Maraging steel"]  = {density = 8.23, short = "M.Steel"};
+    ["Red gold"]        = {density = 14.13};
+    ScAl                = {density = 2.85};
 
     Polycarbonate  = {density = 1.4,  short = "Polycarb"},
     Polycalcite    = {density = 1.5,  short = "Polycalc"},
@@ -143,6 +146,24 @@ local blocks = {
             {"AlFe", "CaRefCu"},
             {"Steel", "Stainless steel"},
             {"AlLi", "Inconel"},
+            {"CuAg", "Maraging steel"},
+            {"Red gold", "ScAl"},
+        },
+    },
+    a1 = {    
+        Headers = {"Alloys", "Alloys"},
+        Rows = {
+            {"Silumin", "Duralumin"},
+            {"AlFe", "CaRefCu"},
+            {"Steel", "Stainless steel"},
+        },
+    },
+    a2 = {    
+        Headers = {"Alloys", "Alloys"},
+        Rows = {
+            {"AlLi", "Inconel"},
+            {"CuAg", "Maraging steel"},
+            {"Red gold", "ScAl"},
         },
     },
     t3 = {    
