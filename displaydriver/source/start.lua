@@ -1,4 +1,4 @@
-local version = "V2.1.6"
+local version = "V2.1.7"
 
 PlayerContainerProficiency = 30 --export Your Container Proficiency bonus in total percent (Skills->Mining and Inventory->Inventory Manager)
 PlayerContainerOptimization = 0 --export Your Container Optimization bonus in total percent (Skills->Mining and Inventory->Stock Control)
@@ -6,7 +6,7 @@ LowLevel = 25 --export Percent for low level indicator
 HighLevel = 50 --export Percent for high level indicator
 ContainerMatch = "C_(.+)" --export Match for single item Storage Container names (e.g. "C_Hematite")
 OverflowMatch = "O_(.+)" --export Match for single item Overflow Container names (e.g. "O_Hydrogen")
-DisplayBlocks = "t5 t4 gl pl a1 t3 t2 t1 ga" --export Container types to display from top to bottom (t1-t5, pl, al, a1, a2, ga, gl)
+DisplayBlocks = "t5 t4 gl pl a12 t3 t2 t1 ga" --export Container types to display from top to bottom (t1-t5, pl, al, a12, a34, ga, gl)
 ContRowsPerScreen = 20 --export Container rows per screen
 ProdRowsPerScreen = 24 --export Production rows per screen
 AlignTop = false --export Align with top of screen
@@ -140,30 +140,30 @@ local blocks = {
         },
     },
     al = {    
-        Headers = {"Alloys", "Alloys"},
+        Headers = {"T1/2 Alloys", "T3/4 Alloys"},
+        Rows = {
+            {"Silumin", "AlLi"},
+            {"AlFe", "CuAg"},
+            {"Steel", "Inconel"},
+            {"Duralumin", "Red gold"},
+            {"CaRefCu", "Maraging steel"},
+            {"Stainless steel", "ScAl"},
+        },
+    },
+    a12 = {    
+        Headers = {"T1 Alloys", "T2 Alloys"},
         Rows = {
             {"Silumin", "Duralumin"},
             {"AlFe", "CaRefCu"},
             {"Steel", "Stainless steel"},
-            {"AlLi", "Inconel"},
-            {"CuAg", "Maraging steel"},
-            {"Red gold", "ScAl"},
         },
     },
-    a1 = {    
-        Headers = {"Alloys", "Alloys"},
+    a34 = {    
+        Headers = {"T3 Alloys", "T4 Alloys"},
         Rows = {
-            {"Silumin", "Duralumin"},
-            {"AlFe", "CaRefCu"},
-            {"Steel", "Stainless steel"},
-        },
-    },
-    a2 = {    
-        Headers = {"Alloys", "Alloys"},
-        Rows = {
-            {"AlLi", "Inconel"},
+            {"AlLi", "Red gold"},
             {"CuAg", "Maraging steel"},
-            {"Red gold", "ScAl"},
+            {"Inconel", "ScAl"},
         },
     },
     t3 = {    
@@ -314,16 +314,20 @@ function analyseCore()
     -- returns container self mass, container base volume
     function getBaseCointainerProperties(id)
         local maxHP = core.getElementMaxHitPointsById(id)
-        if maxHP <= 123 then       -- Hub
+        if maxHP < 124 then        -- Hub
             return 0.0, 0.0
-        elseif maxHP <= 998 then   -- XS
+        elseif maxHP < 999 then    -- XS
             return 229.09, 1000.0
-        elseif maxHP <= 7996 then  -- S
+        elseif maxHP < 7997 then   -- S
             return 1281.31, 8000.0
-        elseif maxHP <= 17315 then -- M
+        elseif maxHP < 17316 then  -- M
             return 7421.35, 64000.0
-        else                       -- L
+        elseif maxHP < 34633 then  -- L
             return 14842.7, 128000.0
+        elseif maxHP < 69267 then  -- XL
+            return 44210.0, 256000.0
+        else                       -- EXL
+            return 88410.0, 512000.0
         end
     end
 
@@ -628,9 +632,11 @@ function refreshContainerDisplay(displays)
 
     for key in DisplayBlocks:gmatch("%S+") do
         local block = blocks[key]
-        addHeaderRow(block.Headers[1], block.Headers[2])
-        for _, row in ipairs(block.Rows) do
-            addRow(row[1], row[2], row[3])
+        if block then
+            addHeaderRow(block.Headers[1], block.Headers[2])
+            for _, row in ipairs(block.Rows) do
+                addRow(row[1], row[2], row[3])
+            end
         end
     end
 
